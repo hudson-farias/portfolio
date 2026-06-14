@@ -6,7 +6,7 @@ class ApiServer {
   private baseURL: string
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || ''
+    this.baseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
   }
 
   private async authHeaders(): Promise<Record<string, string>> {
@@ -14,7 +14,6 @@ class ApiServer {
     const token = cookieStore.get(AUTH_COOKIE)?.value
 
     return {
-      'Content-Type': 'application/json',
       ...(token ? { Cookie: `${AUTH_COOKIE}=${token}` } : {}),
     }
   }
@@ -22,15 +21,17 @@ class ApiServer {
   async request(method: string, endpoint: string, body?: unknown): Promise<Response> {
     const headers = await this.authHeaders()
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    return fetch(`${this.baseURL}${endpoint}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       cache: 'no-store',
       credentials: 'include',
     })
-
-    return response
   }
 
   get(endpoint: string): Promise<Response> {

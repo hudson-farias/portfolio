@@ -2,27 +2,35 @@
 
 import { AppIcon } from "@/components/icons/app-icon"
 import { Reveal } from "../reveal"
+import { formatSocialAriaLabel } from "@/lib/social-label"
 import type { SocialNetwork } from "@/types"
 
 const footerLinks = [
   { label: "Sobre", href: "#about" },
   { label: "Skills", href: "#skills" },
+  { label: "Experiência", href: "#experience" },
   { label: "Projetos", href: "#projects" },
   { label: "Contato", href: "#contact" },
 ]
 
-export const Footer = ({ socialNetworks }: { socialNetworks: SocialNetwork[] }) => {
+export const Footer = ({
+  profileName,
+  profileTagline,
+  socialNetworks,
+}: {
+  profileName: string
+  profileTagline: string
+  socialNetworks: SocialNetwork[]
+}) => {
   return (
     <footer className="mt-20 border-t">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 md:grid-cols-3 md:px-10">
         <Reveal variant="fade-up">
           <div className="space-y-3">
-            <p className="text-lg font-semibold">Hudson Farias</p>
+            <p className="text-lg font-semibold">{profileName}</p>
+            <p className="text-sm text-muted-foreground">{profileTagline}</p>
             <p className="text-sm text-muted-foreground">
-              Software Developer construindo produtos web confiáveis.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              © 2021 — {new Date().getFullYear()} Hudson. Todos os direitos reservados.
+              © 2021 — {new Date().getFullYear()} {profileName}. Todos os direitos reservados.
             </p>
           </div>
         </Reveal>
@@ -56,7 +64,7 @@ export const Footer = ({ socialNetworks }: { socialNetworks: SocialNetwork[] }) 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="surface inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-[transform,colors] hover:-translate-y-0.5 hover:border-foreground/20 hover:text-foreground"
-                    aria-label={network.icon}
+                    aria-label={formatSocialAriaLabel(network.icon, profileName)}
                   >
                     <AppIcon name={network.icon} className="size-4" />
                   </a>

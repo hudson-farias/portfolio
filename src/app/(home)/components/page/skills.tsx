@@ -9,32 +9,56 @@ import type { SkillCategory } from "@/types"
 const GAP_PX = 16
 const TRAILING_PX = 32
 
-export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
+function SkillCard({
+  category,
+  cardWidth,
+  className = "",
+}: {
+  category: SkillCategory
+  cardWidth?: number
+  className?: string
+}) {
+  return (
+    <article
+      data-skill-card
+      style={cardWidth && cardWidth > 0 ? { width: cardWidth } : undefined}
+      className={`relative z-0 flex min-h-[160px] flex-col rounded-2xl surface p-6 transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg ${className}`}
+    >
+      <h3 className="text-base font-semibold">{category.title}</h3>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {category.skills.map((skill) => (
+          <span
+            key={skill.id}
+            className="rounded-full border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+          >
+            {skill.name}
+          </span>
+        ))}
+      </div>
+    </article>
+  )
+}
+
+function SkillsCarousel({ categories }: { categories: SkillCategory[] }) {
   const [activePage, setActivePage] = useState(0)
   const [pageWidth, setPageWidth] = useState(0)
   const [cardWidth, setCardWidth] = useState(0)
-  const [cardsPerView, setCardsPerView] = useState(3.5)
   const [fitsAll, setFitsAll] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
-  const cloneOffsetRef = useRef(0)
-  const isLoopingRef = useRef(false)
 
   const total = categories.length
-  const cloneCount = Math.min(total, Math.ceil(cardsPerView))
 
   const measure = useCallback(() => {
     const container = carouselRef.current
     if (!container) return
 
     const viewport = container.clientWidth
-    const perView = viewport < 640 ? 1.5 : 3.5
+    const perView = 1.5
     const gaps = Math.floor(perView) * GAP_PX
     const card = (viewport - gaps) / perView
 
-    setCardsPerView(perView)
     setPageWidth(viewport)
     setCardWidth(card)
-    cloneOffsetRef.current = total * card + Math.max(0, total - 1) * GAP_PX
     setFitsAll(container.scrollWidth <= container.clientWidth + 1)
   }, [total])
 
@@ -74,13 +98,6 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
     [cardWidth, pageWidth, totalPages, trackWidth],
   )
 
-  const resetLoopScroll = useCallback(() => {
-    const container = carouselRef.current
-    if (!container) return
-    container.scrollLeft = 0
-    isLoopingRef.current = false
-  }, [])
-
   const goToPage = (page: number) => {
     if (!carouselRef.current) return
     const clamped = Math.max(0, Math.min(page, totalPages - 1))
@@ -91,65 +108,18 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
     setActivePage(clamped)
   }
 
-  const loopToStart = () => {
-    const container = carouselRef.current
-    if (!container || !cloneOffsetRef.current) return
-
-    isLoopingRef.current = true
-    setActivePage(0)
-
-    const onScrollEnd = () => {
-      if (container.scrollLeft >= cloneOffsetRef.current - 4) {
-        resetLoopScroll()
-      }
-      container.removeEventListener("scrollend", onScrollEnd)
-    }
-
-    container.addEventListener("scrollend", onScrollEnd)
-    window.setTimeout(() => {
-      if (isLoopingRef.current && container.scrollLeft >= cloneOffsetRef.current - 4) {
-        resetLoopScroll()
-      }
-      container.removeEventListener("scrollend", onScrollEnd)
-    }, 700)
-
-    container.scrollTo({ left: cloneOffsetRef.current, behavior: "smooth" })
-  }
-
-  const loopToEnd = () => {
-    const container = carouselRef.current
-    if (!container || !pageWidth) return
-
-    const target = getScrollLeftForPage(totalPages - 1)
-    isLoopingRef.current = true
-    setActivePage(totalPages - 1)
-
-    const onScrollEnd = () => {
-      isLoopingRef.current = false
-      container.removeEventListener("scrollend", onScrollEnd)
-    }
-
-    container.addEventListener("scrollend", onScrollEnd)
-    window.setTimeout(() => {
-      isLoopingRef.current = false
-      container.removeEventListener("scrollend", onScrollEnd)
-    }, 700)
-
-    container.scrollTo({ left: target, behavior: "smooth" })
-  }
-
   const goNext = () => {
-    if (activePage >= totalPages - 1) loopToStart()
-    else goToPage(activePage + 1)
+    if (activePage >= totalPages - 1) return
+    goToPage(activePage + 1)
   }
 
   const goPrevious = () => {
-    if (activePage <= 0) loopToEnd()
-    else goToPage(activePage - 1)
+    if (activePage <= 0) return
+    goToPage(activePage - 1)
   }
 
   const onCarouselScroll = () => {
-    if (!carouselRef.current || !pageWidth || isLoopingRef.current) return
+    if (!carouselRef.current || !pageWidth) return
 
     const { scrollLeft } = carouselRef.current
     let nearest = 0
@@ -167,36 +137,19 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
     if (nearest !== activePage) setActivePage(nearest)
   }
 
-  if (total === 0) {
-    return (
-      <section id="skills" className="scroll-mt-28 space-y-10">
-        <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Skills</h2>
-          <p className="text-muted-foreground">Em breve novas skills por aqui.</p>
-        </Reveal>
-      </section>
-    )
-  }
-
   const showControls = !fitsAll && totalPages > 1
 
   return (
-    <section id="skills" className="scroll-mt-28 space-y-10">
-      <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Skills</h2>
-        <p className="text-muted-foreground">
-          Construindo interfaces limpas e código confiável.
-        </p>
-      </Reveal>
-
-      <Reveal delay={120} className="relative px-10 sm:px-12">
+    <>
+      <div className="relative isolate z-0 overflow-hidden px-10 sm:px-12">
         {showControls && (
           <>
             <Button
               type="button"
               size="icon"
               variant="outline"
-              className="absolute top-1/2 left-0 z-20 -translate-y-1/2 rounded-full bg-background shadow-sm"
+              disabled={activePage <= 0}
+              className="absolute top-1/2 left-0 z-[1] -translate-y-1/2 rounded-full bg-background shadow-sm"
               onClick={goPrevious}
               aria-label="Página anterior"
             >
@@ -206,7 +159,8 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
               type="button"
               size="icon"
               variant="outline"
-              className="absolute top-1/2 right-0 z-20 -translate-y-1/2 rounded-full bg-background shadow-sm"
+              disabled={activePage >= totalPages - 1}
+              className="absolute top-1/2 right-0 z-[1] -translate-y-1/2 rounded-full bg-background shadow-sm"
               onClick={goNext}
               aria-label="Próxima página"
             >
@@ -223,61 +177,28 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
         >
           <div className="flex w-max gap-4 pr-8 snap-x snap-mandatory">
             {categories.map((category) => (
-              <article
+              <SkillCard
                 key={category.title}
-                data-skill-card
-                style={{ width: cardWidth > 0 ? cardWidth : undefined }}
-                className="relative z-0 flex min-h-[160px] flex-none snap-start flex-col rounded-2xl surface p-6 transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg"
-              >
-                <h3 className="text-base font-semibold">{category.title}</h3>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {category.skills.map((skill) => (
-                    <span
-                      key={skill.id}
-                      className="rounded-full border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-            {categories.slice(0, cloneCount).map((category, i) => (
-              <article
-                key={`${category.title}-clone-${i}`}
-                aria-hidden
-                tabIndex={-1}
-                style={{ width: cardWidth > 0 ? cardWidth : undefined }}
-                className="flex min-h-[160px] flex-none snap-start flex-col rounded-2xl surface p-6"
-              >
-                <h3 className="text-base font-semibold">{category.title}</h3>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {category.skills.map((skill) => (
-                    <span
-                      key={skill.id}
-                      className="rounded-full border px-3 py-1 text-xs text-muted-foreground"
-                    >
-                      {skill.name}
-                    </span>
-                  ))}
-                </div>
-              </article>
+                category={category}
+                cardWidth={cardWidth}
+                className="flex-none snap-start"
+              />
             ))}
           </div>
         </div>
 
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-10 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:left-12"
+          className="pointer-events-none absolute inset-y-0 left-10 z-[1] w-10 bg-gradient-to-r from-background to-transparent sm:left-12"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-10 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:right-12"
+          className="pointer-events-none absolute inset-y-0 right-10 z-[1] w-10 bg-gradient-to-l from-background to-transparent sm:right-12"
         />
-      </Reveal>
+      </div>
 
       {showControls && (
-        <Reveal delay={200} className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-6 flex items-center justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
@@ -289,11 +210,39 @@ export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
                   : "w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/70"
               }`}
               aria-label={`Ir para página ${i + 1} de skills`}
-              aria-current={i === activePage}
+              {...(i === activePage ? { "aria-current": "true" as const } : {})}
             />
           ))}
-        </Reveal>
+        </div>
       )}
+    </>
+  )
+}
+
+export const Skills = ({ categories }: { categories: SkillCategory[] }) => {
+  if (categories.length === 0) {
+    return (
+      <section id="skills" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
+        <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Skills</h2>
+          <p className="text-muted-foreground">Em breve novas skills por aqui.</p>
+        </Reveal>
+      </section>
+    )
+  }
+
+  return (
+    <section id="skills" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
+      <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
+        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Skills</h2>
+        <p className="text-muted-foreground">
+          Construindo interfaces limpas e código confiável.
+        </p>
+      </Reveal>
+
+      <Reveal delay={120} className="relative isolate z-0 overflow-hidden">
+        <SkillsCarousel categories={categories} />
+      </Reveal>
     </section>
   )
 }

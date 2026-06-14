@@ -13,23 +13,15 @@ const TRAILING_PX = 32
 function ProjectCard({
   project,
   cardWidth,
-  interactive = true,
 }: {
   project: Project
   cardWidth: number
-  interactive?: boolean
 }) {
   return (
     <article
       data-project-card
       style={{ width: cardWidth > 0 ? cardWidth : undefined }}
-      className={`relative z-0 flex min-h-[280px] flex-none snap-start flex-col overflow-hidden rounded-2xl surface transition-[transform,colors,box-shadow] duration-300 ease-out sm:min-h-[320px] ${
-        interactive
-          ? "hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg"
-          : ""
-      }`}
-      aria-hidden={interactive ? undefined : true}
-      tabIndex={interactive ? undefined : -1}
+      className="relative z-0 flex min-h-[280px] flex-none snap-start flex-col overflow-hidden rounded-2xl surface transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg sm:min-h-[320px]"
     >
       {project.image_url ? (
         <div className="relative aspect-video w-full overflow-hidden border-b bg-muted/20">
@@ -56,7 +48,6 @@ function ProjectCard({
               href={project.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              tabIndex={interactive ? undefined : -1}
               className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <AppIcon name="github" className="size-4" />
@@ -68,7 +59,6 @@ function ProjectCard({
               href={project.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              tabIndex={interactive ? undefined : -1}
               className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <ExternalLink className="size-4" />
@@ -85,14 +75,10 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
   const [activePage, setActivePage] = useState(0)
   const [pageWidth, setPageWidth] = useState(0)
   const [cardWidth, setCardWidth] = useState(0)
-  const [cardsPerView, setCardsPerView] = useState(1.5)
   const [fitsAll, setFitsAll] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
-  const cloneOffsetRef = useRef(0)
-  const isLoopingRef = useRef(false)
 
   const total = projects.length
-  const cloneCount = Math.min(total, Math.ceil(cardsPerView))
 
   const measure = useCallback(() => {
     const container = carouselRef.current
@@ -103,10 +89,8 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
     const gaps = Math.floor(perView) * GAP_PX
     const card = (viewport - gaps) / perView
 
-    setCardsPerView(perView)
     setPageWidth(viewport)
     setCardWidth(card)
-    cloneOffsetRef.current = total * card + Math.max(0, total - 1) * GAP_PX
     setFitsAll(container.scrollWidth <= container.clientWidth + 1)
   }, [total])
 
@@ -146,13 +130,6 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
     [cardWidth, pageWidth, totalPages, trackWidth],
   )
 
-  const resetLoopScroll = useCallback(() => {
-    const container = carouselRef.current
-    if (!container) return
-    container.scrollLeft = 0
-    isLoopingRef.current = false
-  }, [])
-
   const goToPage = (page: number) => {
     if (!carouselRef.current) return
     const clamped = Math.max(0, Math.min(page, totalPages - 1))
@@ -163,65 +140,18 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
     setActivePage(clamped)
   }
 
-  const loopToStart = () => {
-    const container = carouselRef.current
-    if (!container || !cloneOffsetRef.current) return
-
-    isLoopingRef.current = true
-    setActivePage(0)
-
-    const onScrollEnd = () => {
-      if (container.scrollLeft >= cloneOffsetRef.current - 4) {
-        resetLoopScroll()
-      }
-      container.removeEventListener("scrollend", onScrollEnd)
-    }
-
-    container.addEventListener("scrollend", onScrollEnd)
-    window.setTimeout(() => {
-      if (isLoopingRef.current && container.scrollLeft >= cloneOffsetRef.current - 4) {
-        resetLoopScroll()
-      }
-      container.removeEventListener("scrollend", onScrollEnd)
-    }, 700)
-
-    container.scrollTo({ left: cloneOffsetRef.current, behavior: "smooth" })
-  }
-
-  const loopToEnd = () => {
-    const container = carouselRef.current
-    if (!container || !pageWidth) return
-
-    const target = getScrollLeftForPage(totalPages - 1)
-    isLoopingRef.current = true
-    setActivePage(totalPages - 1)
-
-    const onScrollEnd = () => {
-      isLoopingRef.current = false
-      container.removeEventListener("scrollend", onScrollEnd)
-    }
-
-    container.addEventListener("scrollend", onScrollEnd)
-    window.setTimeout(() => {
-      isLoopingRef.current = false
-      container.removeEventListener("scrollend", onScrollEnd)
-    }, 700)
-
-    container.scrollTo({ left: target, behavior: "smooth" })
-  }
-
   const goNext = () => {
-    if (activePage >= totalPages - 1) loopToStart()
-    else goToPage(activePage + 1)
+    if (activePage >= totalPages - 1) return
+    goToPage(activePage + 1)
   }
 
   const goPrevious = () => {
-    if (activePage <= 0) loopToEnd()
-    else goToPage(activePage - 1)
+    if (activePage <= 0) return
+    goToPage(activePage - 1)
   }
 
   const onCarouselScroll = () => {
-    if (!carouselRef.current || !pageWidth || isLoopingRef.current) return
+    if (!carouselRef.current || !pageWidth) return
 
     const { scrollLeft } = carouselRef.current
     let nearest = 0
@@ -241,7 +171,7 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
 
   if (total === 0) {
     return (
-      <section id="projects" className="scroll-mt-28 space-y-10">
+      <section id="projects" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
         <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
           <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Projetos</h2>
           <p className="text-muted-foreground">Em breve novos projetos por aqui.</p>
@@ -253,20 +183,21 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
   const showControls = !fitsAll && totalPages > 1
 
   return (
-    <section id="projects" className="scroll-mt-28 space-y-10">
+    <section id="projects" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
       <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
         <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Projetos</h2>
         <p className="text-muted-foreground">Seleção de trabalhos recentes.</p>
       </Reveal>
 
-      <Reveal delay={120} className="relative px-10 sm:px-12">
+      <Reveal delay={120} className="relative isolate z-0 overflow-hidden px-10 sm:px-12">
         {showControls && (
           <>
             <Button
               type="button"
               size="icon"
               variant="outline"
-              className="absolute top-1/2 left-0 z-20 -translate-y-1/2 rounded-full bg-background shadow-sm"
+              disabled={activePage <= 0}
+              className="absolute top-1/2 left-0 z-[1] -translate-y-1/2 rounded-full bg-background shadow-sm"
               onClick={goPrevious}
               aria-label="Página anterior"
             >
@@ -276,7 +207,8 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
               type="button"
               size="icon"
               variant="outline"
-              className="absolute top-1/2 right-0 z-20 -translate-y-1/2 rounded-full bg-background shadow-sm"
+              disabled={activePage >= totalPages - 1}
+              className="absolute top-1/2 right-0 z-[1] -translate-y-1/2 rounded-full bg-background shadow-sm"
               onClick={goNext}
               aria-label="Próxima página"
             >
@@ -295,24 +227,16 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
             {projects.map((project) => (
               <ProjectCard key={project.id} project={project} cardWidth={cardWidth} />
             ))}
-            {projects.slice(0, cloneCount).map((project, i) => (
-              <ProjectCard
-                key={`${project.id}-clone-${i}`}
-                project={project}
-                cardWidth={cardWidth}
-                interactive={false}
-              />
-            ))}
           </div>
         </div>
 
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-10 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:left-12"
+          className="pointer-events-none absolute inset-y-0 left-10 z-[1] w-10 bg-gradient-to-r from-background to-transparent sm:left-12"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 right-10 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:right-12"
+          className="pointer-events-none absolute inset-y-0 right-10 z-[1] w-10 bg-gradient-to-l from-background to-transparent sm:right-12"
         />
       </Reveal>
 
@@ -329,7 +253,7 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
                   : "w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/70"
               }`}
               aria-label={`Ir para página ${i + 1} de projetos`}
-              aria-current={i === activePage}
+              {...(i === activePage ? { "aria-current": "true" as const } : {})}
             />
           ))}
         </Reveal>

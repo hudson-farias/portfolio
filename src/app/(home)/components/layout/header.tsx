@@ -4,13 +4,13 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { SiteLogo } from "@/components/icons/site-logo"
 import { ThemeToggle } from "@/components/theme/theme-toggle"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { label: "Home", href: "#hero" },
   { label: "Sobre", href: "#about" },
   { label: "Skills", href: "#skills" },
+  { label: "Experiência", href: "#experience" },
   { label: "Projetos", href: "#projects" },
   { label: "Contato", href: "#contact" },
 ]
@@ -30,7 +30,7 @@ export const Header = () => {
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
         if (visible?.target.id) setActive(`#${visible.target.id}`)
       },
-      { rootMargin: "-40% 0px -45% 0px", threshold: [0, 0.25, 0.5] },
+      { rootMargin: "-112px 0px -50% 0px", threshold: [0, 0.15, 0.35, 0.5] },
     )
 
     sections.forEach((section) => observer.observe(section))
@@ -41,9 +41,9 @@ export const Header = () => {
     <header className="land-slide-down sticky top-0 z-50 px-4 pt-4 md:px-6">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
         <Link
-          href="/admin"
+          href="#hero"
           className="flex shrink-0 items-center transition-opacity hover:opacity-85"
-          aria-label="Admin"
+          aria-label="Início"
         >
           <SiteLogo className="h-8" />
         </Link>
@@ -63,13 +63,22 @@ export const Header = () => {
               {item.label}
             </a>
           ))}
+          <Link
+            href="/admin"
+            className="rounded-full px-3 py-2 text-xs text-muted-foreground/70 transition-colors hover:text-foreground"
+          >
+            Admin
+          </Link>
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/admin"
+            className="rounded-full px-3 py-2 text-xs text-muted-foreground/70 transition-colors hover:text-foreground md:hidden"
+          >
+            Admin
+          </Link>
           <ThemeToggle />
-          <Button asChild className="hidden rounded-full sm:inline-flex">
-            <a href="#contact">Vamos conversar</a>
-          </Button>
         </div>
       </div>
 

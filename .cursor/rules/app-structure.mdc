@@ -1,12 +1,16 @@
 ---
-description: Estrutura de rotas — page/layout client e pasta components
-globs: "**/src/app/**/*.{tsx,ts}"
+description: App Router, API, fetch, navegação e estilo (portifolio-3)
+globs: "**/src/**/*.{tsx,ts}"
 alwaysApply: false
 ---
 
-# Estrutura App Router
+# Frontend — portifolio-3
 
-## Client Components por rota
+Repositório do **site Next.js** — separado de `portfolio-api`. Regras aqui valem só em `portifolio-3/`.
+
+## Estrutura App Router
+
+### Client Components por rota
 
 Coloque `"use client"` nos arquivos colados à rota, não em `components/` genérico da rota:
 
@@ -41,7 +45,7 @@ export default async function AdminLayout({ children }) {
 }
 ```
 
-## Pasta `components/` na rota
+### Pasta `components/` na rota
 
 Use `app/[rota]/components/` **somente** quando:
 
@@ -53,16 +57,162 @@ Prefira arquivos colados à rota para o resto:
 - `auth-panel.tsx` — Server Component auxiliar do layout
 - `page-client.tsx` / `layout-client.tsx` — client da rota
 
-## Evitar
+### `src/components/`
+
+Reservado a UI **global** do projeto (`ui/button`, etc.), não a telas de uma rota específica.
+
+### Evitar (estrutura)
 
 - `components/foo-client.tsx` como substituto de `page-client.tsx`
 - `"use client"` em `page.tsx` ou `layout.tsx` sem necessidade
 - duplicar client boundary em vários arquivos pequenos na mesma rota
 
-## `src/components/`
+## API e fetch
 
-Reservado a UI **global** do projeto (`ui/button`, etc.), não a telas de uma rota específica.
+### Classe `API`
 
-## Estilo
+`src/api/client.ts` e `src/api/server.ts` são **wrappers de `fetch`** (URL base, headers, cookies). Não adicionar `getJson`, parse automático nem `try/catch` na classe.
 
-Ver `preserve-vscode-edits.mdc` (não sobrescrever código editado no VS Code) e `components-style.mdc` (arrow functions, imports em uma linha).
+### Server Components (page, layout, metadata)
+
+Server alimenta client via props. Padrão direto:
+
+```tsx
+const response = await API.get("/landpage/page")
+if (!response.ok) {
+  // fallback explícito ou deixar falhar — conforme o caso
+}
+const data = await response.json()
+```
+
+- Validar **`response.ok`** para 4xx/5xx — não usar `try/catch` só para isso.
+- `fetch` não lança em HTTP error; sem `response.ok`, erro passa silencioso.
+- `try/catch` só se houver tratamento real de exceção (ex.: client admin com toast), não como substituto de `!response.ok`.
+
+### Metadata com fallback
+
+Quando SEO pode degradar sem derrubar a rota:
+
+```tsx
+const fallback: Metadata = { title: "Portfólio", description: "..." }
+const response = await API.get("/landpage/metadata")
+if (!response.ok) return fallback
+const metadata = await response.json()
+```
+
+### Rotas da API por contexto Next
+
+Uma rota por contexto de render — não várias chamadas na mesma `page.tsx`:
+
+| Contexto | Rota |
+|----------|------|
+| `generateMetadata` | `/landpage/metadata` |
+| `layout` | `/landpage/layout` |
+| `page` (home) | `/landpage/page` |
+
+Nova rota só quando page e layout não compartilham o mesmo payload.
+
+### Evitar (API)
+
+```tsx
+// ❌ try/catch genérico mascarando 404/500
+try {
+  const response = await API.get("/x")
+  const data = await response.json()
+} catch {
+  return fallback
+}
+
+// ❌ assumir sucesso sem checar status
+const data = await (await API.get("/x")).json()
+
+// ❌ várias rotas na mesma page
+const [hero, about, skills] = await Promise.all([...])
+```
+
+## Navegação
+
+### Link (rotas internas)
+
+Para rotas internas do app, use sempre `import Link from "next/link"`.
+
+- Rotas internas (`/`, `/admin`, etc.): `<Link href="...">`, nunca `<a href="...">`.
+- Links externos (`https://`, `mailto:`, `tel:`) e âncoras na mesma página (`#hero`): `<a href="...">` com `target`/`rel` quando fizer sentido.
+
+```tsx
+// ❌ BAD
+<a href="/admin">Admin</a>
+
+// ✅ GOOD
+import Link from "next/link"
+<Link href="/admin">Admin</Link>
+
+// ✅ OK — externo ou âncora
+<a href="#contact">Contato</a>
+<a href="https://github.com/usuario" target="_blank" rel="noopener noreferrer">GitHub</a>
+```
+
+### Redirecionamento sem JavaScript
+
+Prefira navegação declarativa ou redirecionamento no servidor.
+
+**Preferir (em ordem):** `Link` → `<a href>` (externo/OAuth) → `redirect()` de `next/navigation` no servidor.
+
+**Evitar:** `window.location`, `router.push`/`replace` só para trocar de página, `onClick` que apenas redireciona.
+
+**JS aceitável:** `router.refresh()`, destino após lógica assíncrona (URL da API), fluxos com `preventDefault`.
+
+```tsx
+// ❌ BAD
+<Button onClick={() => { window.location.href = "/admin" }}>Admin</Button>
+
+// ✅ GOOD
+<Button asChild>
+  <Link href="/admin">Admin</Link>
+</Button>
+
+<Button asChild>
+  <a href={discordLoginUrl}>Entrar</a>
+</Button>
+```
+
+## Estilo de componentes
+
+Vale para `src/components/**`, `app/**/components/**`, `*-client.tsx` e arquivos de UI de rota (`auth-panel.tsx`, etc.).
+
+Respeite `preserve-vscode-edits.mdc`: aplique este estilo só em código novo ou quando o usuário pedir explicitamente.
+
+### Arrow functions
+
+Componentes React devem ser **arrow functions** (`const` + `=>`), não `function`.
+
+```tsx
+// ❌ BAD
+export function Header() {
+  return <header />
+}
+
+// ✅ GOOD
+export const Header = () => {
+  return <header />
+}
+```
+
+Exceção aceitável: `export default async function Page()` em `page.tsx` / `layout.tsx` (rotas Next).
+
+### Imports em uma linha
+
+Cada `import` deve ocupar **uma única linha**, sem quebra.
+
+```tsx
+// ❌ BAD
+import {
+  Button,
+} from "@/components/ui/button"
+
+// ✅ GOOD
+import { Button } from "@/components/ui/button"
+import type { PortfolioData } from "@/lib/types"
+```
+
+Ordem sugerida: pacotes externos → aliases `@/...` → `import type`.

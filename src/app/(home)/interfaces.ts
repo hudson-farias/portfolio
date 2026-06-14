@@ -34,6 +34,7 @@ export interface PortfolioData {
 export interface ContactResponse {
   email: string
   others: SocialNetwork[]
+  profile_name: string
 }
 
 export interface HeroProfile {
@@ -70,6 +71,7 @@ export interface AboutResponse {
     clients_count: number
   }
   social_networks: SocialNetwork[]
+  profile_name: string
 }
 
 export interface HeroResponse {
@@ -79,6 +81,27 @@ export interface HeroResponse {
 
 export interface FooterResponse {
   social_networks: SocialNetwork[]
+}
+
+export interface MetadataResponse {
+  name: string
+  roles: string[]
+  about: string
+}
+
+export interface LayoutResponse {
+  hero: HeroResponse
+  footer: FooterResponse
+  contact: ContactResponse
+}
+
+export interface PageResponse {
+  hero: HeroResponse
+  about: AboutResponse
+  skills: SkillsResponse
+  experiences: ExperiencesResponse
+  projects: ProjectsResponse
+  contact: ContactResponse
 }
 
 export interface LandpageResponse {

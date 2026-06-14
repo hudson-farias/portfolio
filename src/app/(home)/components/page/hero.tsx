@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Download, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { HeroProfile } from "../../interfaces"
@@ -59,8 +59,16 @@ const TypingRoles = ({ roles }: { roles: string[] }) => {
   )
 }
 
+const isAvailabilityRole = (role: string) => /^disponível/i.test(role.trim())
+
 export const Hero = ({ profile }: { profile: HeroProfile }) => {
-  const firstName = profile.name.split(" ")[0]
+  const firstName = profile.name.trim().split(/\s+/)[0]
+  const roles = useMemo(() => {
+    if (!profile.available) return profile.roles
+
+    const filtered = profile.roles.filter((role) => !isAvailabilityRole(role))
+    return filtered.length > 0 ? filtered : profile.roles
+  }, [profile.available, profile.roles])
 
   return (
     <section id="hero" className="scroll-mt-28 space-y-10 pt-8 md:pt-14">
@@ -68,7 +76,7 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
         {profile.available && (
           <p className="surface land-fade-up inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
             <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
-            Disponível para freelancers e oportunidades
+            Disponível para projetos
           </p>
         )}
 
@@ -77,7 +85,7 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
             Oi, eu sou {firstName}.
           </h1>
           <div className="land-fade-up land-delay-200">
-            <TypingRoles roles={profile.roles} />
+            <TypingRoles roles={roles} />
           </div>
         </div>
 
@@ -90,18 +98,12 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
             <MapPin className="size-4" />
             {profile.location}
           </span>
-          {profile.available && (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-emerald-500" />
-              Disponível agora
-            </span>
-          )}
         </div>
 
         <div className="land-fade-up land-delay-500 flex flex-wrap gap-3">
           <Button asChild size="lg" className="rounded-full px-6 transition-transform hover:scale-[1.02]">
             <a href="#contact">
-              Contratar
+              Vamos conversar
               <ArrowRight />
             </a>
           </Button>

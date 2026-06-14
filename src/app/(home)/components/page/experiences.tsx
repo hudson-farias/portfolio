@@ -1,6 +1,7 @@
 "use client"
 
 import { Reveal } from "../reveal"
+import { SanitizedHtml } from "@/components/sanitized-html"
 import type { Experience } from "@/types"
 
 export const Experiences = ({ experiences }: { experiences: Experience[] }) => {
@@ -44,9 +45,9 @@ export const Experiences = ({ experiences }: { experiences: Experience[] }) => {
                   </span>
                 </div>
               </div>
-              <div
-                className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground [&_a]:text-foreground [&_a]:underline [&_em]:italic [&_li]:ml-4 [&_ol]:list-decimal [&_ol]:pl-5 [&_p+p]:mt-2 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5"
-                dangerouslySetInnerHTML={{ __html: experience.description }}
+              <SanitizedHtml
+                html={experience.description}
+                className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground"
               />
             </article>
           </Reveal>

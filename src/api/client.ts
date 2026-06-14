@@ -6,7 +6,7 @@ class ApiClient {
   public loginUrl: string
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || ''
+    this.baseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
     this.loginUrl = `${this.baseURL}/auth/discord/redirect`
   }
 

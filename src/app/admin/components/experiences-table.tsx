@@ -1,5 +1,6 @@
 import type { AdminExperience } from "@/app/admin/experiences/interfaces"
 import type { Experience } from "@/types"
+import { SanitizedHtml } from "@/components/sanitized-html"
 
 import { RowActions } from "./row-actions"
 
@@ -44,7 +45,12 @@ export function ExperiencesTable({
                 {"contract_type" in item && item.contract_type ? item.contract_type : "—"}
               </td>
               <td className="py-3 pr-4 whitespace-nowrap text-zinc-500">{item.period}</td>
-              <td className="py-3 pr-4 text-zinc-600 dark:text-zinc-400">{item.description}</td>
+              <td className="py-3 pr-4 max-w-xs text-zinc-600 dark:text-zinc-400">
+                <SanitizedHtml
+                  html={item.description}
+                  className="line-clamp-4 space-y-0 text-sm leading-relaxed [&_p+p]:mt-1"
+                />
+              </td>
               {canMutate && (
                 <td className="py-3 pr-4">
                   {item.hidden ? (

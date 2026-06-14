@@ -18,7 +18,7 @@ O usuário edita partes do projeto no **VS Code**. O agente do Cursor **não dev
 
 - Criar arquivos novos seguindo as regras do projeto.
 - Editar trechos pontuais pedidos pelo usuário (bug, feature, integração).
-- Aplicar `components-style.mdc`, `navigation.mdc` e `app-structure.mdc` **somente** quando o usuário pedir alinhamento ou em código que você acabou de criar.
+- Aplicar `app-structure.mdc` **somente** quando o usuário pedir alinhamento ou em código que você acabou de criar.
 
 ## Em dúvida
 
