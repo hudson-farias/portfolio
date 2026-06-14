@@ -24,13 +24,14 @@ export default async function Home() {
       <About
         aboutExtended={about.profile.about_extended}
         stats={aboutStats}
+        linkedin={about.linkedin}
         socialNetworks={about.social_networks}
         profileName={about.profile_name}
       />
       <Skills categories={skills.skills} />
       <Experiences experiences={experiences.experiences} />
       <Projects projects={projects.projects} />
-      <Contact email={contact.email} others={contact.others} profileName={contact.profile_name} />
+      <Contact contact={contact} />
     </>
   )
 }

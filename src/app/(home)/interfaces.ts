@@ -33,6 +33,10 @@ export interface PortfolioData {
 
 export interface ContactResponse {
   email: string
+  whatsapp_url: string
+  linkedin: string
+  github: string
+  gitlab: string
   others: SocialNetwork[]
   profile_name: string
 }
@@ -70,6 +74,7 @@ export interface AboutResponse {
     projects_count: number
     clients_count: number
   }
+  linkedin: string
   social_networks: SocialNetwork[]
   profile_name: string
 }
@@ -80,6 +85,9 @@ export interface HeroResponse {
 }
 
 export interface FooterResponse {
+  github: string
+  gitlab: string
+  linkedin: string
   social_networks: SocialNetwork[]
 }
 

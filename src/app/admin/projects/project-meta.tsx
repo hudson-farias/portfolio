@@ -8,13 +8,7 @@ function formatUpdatedAt(value?: string | null) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium" }).format(new Date(value))
 }
 
-function MetaBadge({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode
-  tone?: "neutral" | "public" | "private" | "warning"
-}) {
+function MetaBadge({ children, tone = "neutral", }: { children: React.ReactNode; tone?: "neutral" | "public" | "private" | "warning" }) {
   const tones = {
     neutral: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
     public: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",

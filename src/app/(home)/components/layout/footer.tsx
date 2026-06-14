@@ -3,7 +3,7 @@
 import { AppIcon } from "@/components/icons/app-icon"
 import { Reveal } from "../reveal"
 import { formatSocialAriaLabel } from "@/lib/social-label"
-import type { SocialNetwork } from "@/types"
+import type { FooterResponse } from "../../interfaces"
 
 const footerLinks = [
   { label: "Sobre", href: "#about" },
@@ -13,15 +13,41 @@ const footerLinks = [
   { label: "Contato", href: "#contact" },
 ]
 
+type FooterLink = {
+  key: string
+  icon: string
+  url: string
+}
+
+function buildFooterLinks(footer: FooterResponse): FooterLink[] {
+  const links: FooterLink[] = [
+    { key: "github", icon: "github", url: footer.github },
+    { key: "gitlab", icon: "gitlab", url: footer.gitlab },
+    { key: "linkedin", icon: "linkedin", url: footer.linkedin },
+  ]
+
+  for (const network of footer.social_networks) {
+    links.push({
+      key: `network-${network.id}`,
+      icon: network.icon,
+      url: network.url,
+    })
+  }
+
+  return links
+}
+
 export const Footer = ({
   profileName,
   profileTagline,
-  socialNetworks,
+  footer,
 }: {
   profileName: string
   profileTagline: string
-  socialNetworks: SocialNetwork[]
+  footer: FooterResponse
 }) => {
+  const links = buildFooterLinks(footer)
+
   return (
     <footer className="mt-20 border-t">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 md:grid-cols-3 md:px-10">
@@ -56,21 +82,25 @@ export const Footer = ({
         <Reveal variant="fade-up" delay={160}>
           <div>
             <p className="mb-3 text-sm font-medium">Redes</p>
-            <div className="flex flex-wrap gap-2">
-              {socialNetworks.map((network, i) => (
-                <Reveal key={network.id} as="span" variant="scale" delay={200 + i * 80}>
-                  <a
-                    href={network.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="surface inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-[transform,colors] hover:-translate-y-0.5 hover:border-foreground/20 hover:text-foreground"
-                    aria-label={formatSocialAriaLabel(network.icon, profileName)}
-                  >
-                    <AppIcon name={network.icon} className="size-4" />
-                  </a>
-                </Reveal>
-              ))}
-            </div>
+            {links.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {links.map((link, i) => (
+                  <Reveal key={link.key} as="span" variant="scale" delay={200 + i * 80}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="surface inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-[transform,colors] hover:-translate-y-0.5 hover:border-foreground/20 hover:text-foreground"
+                      aria-label={formatSocialAriaLabel(link.icon, profileName)}
+                    >
+                      <AppIcon name={link.icon} className="size-4" />
+                    </a>
+                  </Reveal>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">—</p>
+            )}
           </div>
         </Reveal>
       </div>

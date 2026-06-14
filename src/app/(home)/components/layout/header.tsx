@@ -39,7 +39,7 @@ export const Header = () => {
   }, [])
 
   return (
-    <header className="land-slide-down sticky top-0 z-50 px-4 pt-4 md:px-6">
+    <header className="land-slide-down sticky top-0 z-50 border-b border-border/50 bg-background/75 px-4 pt-4 pb-3 backdrop-blur-xl backdrop-saturate-150 md:px-6 md:pb-4">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
         <Link
           href="#hero"
@@ -49,7 +49,7 @@ export const Header = () => {
           <SiteLogo className="h-8" />
         </Link>
 
-        <nav className="surface hidden items-center gap-1 rounded-full p-1 backdrop-blur md:flex">
+        <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-card/70 p-1 shadow-sm backdrop-blur-md md:flex">
           {navItems.map((item) => (
             <a
               key={item.href}
@@ -74,7 +74,7 @@ export const Header = () => {
         </div>
       </div>
 
-      <nav className="surface mx-auto mt-3 flex max-w-6xl gap-1 overflow-x-auto rounded-full p-1 backdrop-blur md:hidden">
+      <nav className="mx-auto mt-3 flex max-w-6xl gap-1 overflow-x-auto rounded-full border border-border/60 bg-card/70 p-1 shadow-sm backdrop-blur-md md:hidden">
         {navItems.map((item) => (
           <a
             key={item.href}

@@ -111,6 +111,19 @@ export const socialIconNames = [
   "youtube",
 ] as const
 
+const profileContactIconNames = new Set([
+  "github",
+  "gitlab",
+  "linkedin",
+  "mail",
+  "telegram",
+  "whatsapp",
+])
+
+export const adminSocialIconNames = socialIconNames.filter(
+  (name) => !profileContactIconNames.has(name),
+)
+
 export const skillIconNames = iconNames.filter(
   (name) => !socialIconNames.includes(name as (typeof socialIconNames)[number]),
 )

@@ -16,7 +16,7 @@ export default async function HomeLayout({ children }: Readonly<{ children: Reac
         {children}
       </main>
 
-      <Footer profileName={hero.profile.name} profileTagline={hero.profile.about} socialNetworks={footer.social_networks} />
+      <Footer profileName={hero.profile.name} profileTagline={hero.profile.about} footer={footer} />
     </div>
   )
 }

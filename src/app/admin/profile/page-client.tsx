@@ -10,7 +10,7 @@ import type { AdminProfile, ProfileForm, ProfilePageClientProps } from "./interf
 import { useAdminAuth } from "@/contexts/admin-auth"
 
 import { AlertBanner } from "../components/alert-banner"
-import { CheckboxField, Field, TextArea, TextInput } from "../components/form-fields"
+import { CheckboxField, Field, TextArea, TextInput, WhatsAppInput } from "../components/form-fields"
 import { PageHeader } from "../components/page-header"
 import { adminMutation } from "../lib/admin-toast"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,11 @@ function profileToForm(profile: AdminProfile): ProfileForm {
     about_me: profile.about_me,
     location: profile.location,
     available: profile.available,
+    email: profile.email,
+    whatsapp: profile.whatsapp,
+    linkedin: profile.linkedin,
+    github: profile.github,
+    gitlab: profile.gitlab,
   }
 }
 
@@ -140,6 +145,65 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
                   onChange={(e) => setForm({ ...form, about_me: e.target.value })}
                 />
               </Field>
+
+              <div className="border-t border-zinc-200 pt-5 dark:border-zinc-800">
+                <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">Contato profissional</p>
+                <div className="space-y-5">
+                  <Field label="E-mail">
+                    <TextInput
+                      required
+                      disabled={!canMutate}
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field label="WhatsApp">
+                    <WhatsAppInput
+                      required
+                      disabled={!canMutate}
+                      placeholder="+55 (21) 99999-9999"
+                      value={form.whatsapp}
+                      onChange={(digits) => setForm({ ...form, whatsapp: digits })}
+                    />
+                  </Field>
+
+                  <Field label="LinkedIn">
+                    <TextInput
+                      required
+                      disabled={!canMutate}
+                      type="url"
+                      placeholder="https://linkedin.com/in/..."
+                      value={form.linkedin}
+                      onChange={(e) => setForm({ ...form, linkedin: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field label="GitHub">
+                    <TextInput
+                      required
+                      disabled={!canMutate}
+                      type="url"
+                      placeholder="https://github.com/..."
+                      value={form.github}
+                      onChange={(e) => setForm({ ...form, github: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field label="GitLab">
+                    <TextInput
+                      required
+                      disabled={!canMutate}
+                      type="url"
+                      placeholder="https://gitlab.com/..."
+                      value={form.gitlab}
+                      onChange={(e) => setForm({ ...form, gitlab: e.target.value })}
+                    />
+                  </Field>
+                </div>
+              </div>
             </div>
 
             {canMutate && (

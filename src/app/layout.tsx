@@ -63,6 +63,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const { hero, footer, contact }: LayoutResponse = await response.json()
 
   const sameAs = [
+    contact.linkedin,
+    contact.github,
+    contact.gitlab,
+    contact.whatsapp_url,
     ...footer.social_networks.map((network) => network.url),
     ...contact.others.map((network) => network.url),
   ]

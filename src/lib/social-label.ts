@@ -13,6 +13,10 @@ const ICON_LABELS: Record<string, string> = {
   mail: "E-mail",
 }
 
+export function socialNetworkLabel(icon: string): string {
+  return ICON_LABELS[icon.toLowerCase()] ?? icon
+}
+
 export function formatSocialAriaLabel(icon: string, profileName: string): string {
   const network = ICON_LABELS[icon.toLowerCase()] ?? icon
   return `${network} de ${profileName}`

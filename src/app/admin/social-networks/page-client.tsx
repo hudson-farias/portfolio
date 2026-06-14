@@ -18,7 +18,7 @@ import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
-import { socialIconNames } from "@/components/icons/map"
+import { adminSocialIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
 import { adminMutation, adminToast } from "../lib/admin-toast"
 import { formatLandpageSections, LANDPAGE_SECTIONS } from "../lib/landpage-sections"
@@ -197,7 +197,7 @@ export function SocialNetworksPageClient({ initialItems }: SocialNetworksPageCli
         <Field label="Ícone">
           <IconSelect
             required
-            options={socialIconNames}
+            options={adminSocialIconNames}
             value={form.icon}
             onChange={(icon) => setForm((f) => ({ ...f, icon }))}
           />

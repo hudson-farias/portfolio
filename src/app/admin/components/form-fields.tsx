@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils"
 
+import { formatWhatsAppMask, whatsappDigits } from "../lib/whatsapp-mask"
+
 const fieldClass =
   "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-zinc-500"
 
@@ -22,6 +24,28 @@ export function Field({
 
 export function TextInput(props: React.ComponentProps<"input">) {
   return <input className={fieldClass} {...props} />
+}
+
+export function WhatsAppInput({
+  value,
+  onChange,
+  className,
+  ...props
+}: Omit<React.ComponentProps<"input">, "value" | "onChange" | "type" | "inputMode"> & {
+  value: string
+  onChange: (digits: string) => void
+}) {
+  return (
+    <input
+      className={cn(fieldClass, className)}
+      type="tel"
+      inputMode="numeric"
+      autoComplete="tel"
+      value={formatWhatsAppMask(value)}
+      onChange={(e) => onChange(whatsappDigits(e.target.value))}
+      {...props}
+    />
+  )
 }
 
 export function TextArea(props: React.ComponentProps<"textarea">) {

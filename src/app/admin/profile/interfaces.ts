@@ -5,6 +5,11 @@ export interface AdminProfile {
   about_me: string
   location: string
   available: boolean
+  email: string
+  whatsapp: string
+  linkedin: string
+  github: string
+  gitlab: string
 }
 
 export interface ProfileForm {
@@ -14,6 +19,11 @@ export interface ProfileForm {
   about_me: string
   location: string
   available: boolean
+  email: string
+  whatsapp: string
+  linkedin: string
+  github: string
+  gitlab: string
 }
 
 export interface ProfilePageClientProps {
