@@ -5,37 +5,156 @@ import { useEffect, useState } from "react"
 import { FolderGit2, Plus } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminProject, ProjectsPageClientProps } from "./interfaces"
+import type {
+  AdminProject,
+  ProjectForm,
+  ProjectsPageClientProps,
+} from "./interfaces"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
+import { Field, TextArea, TextInput } from "../components/form-fields"
+import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
 import { adminMutation } from "../lib/admin-toast"
 import { Button } from "@/components/ui/button"
+import { ProjectMeta } from "./project-meta"
+
+const emptyForm: ProjectForm = {
+  title: "",
+  description: "",
+  image_url: "",
+  live_url: "",
+  repo_url: "",
+}
+
+function projectFormFromGitHub(project: AdminProject): ProjectForm {
+  return {
+    title: project.name,
+    description: project.description ?? "",
+    image_url: "",
+    live_url: project.homepage ?? "",
+    repo_url: project.html_url,
+  }
+}
+
+function projectFormFromVisible(project: AdminProject): ProjectForm {
+  return {
+    title: project.title ?? project.name,
+    description: project.description ?? "",
+    image_url: project.image_url ?? "",
+    live_url: project.live_url ?? project.homepage ?? "",
+    repo_url: project.repo_url ?? project.html_url,
+  }
+}
+
+function buildPayload(form: ProjectForm, includeRepoUrl: boolean) {
+  return {
+    title: form.title.trim(),
+    description: form.description.trim() || null,
+    image_url: form.image_url.trim() || null,
+    live_url: form.live_url.trim() || null,
+    ...(includeRepoUrl ? { repo_url: form.repo_url.trim() || null } : {}),
+  }
+}
 
 export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
   const { canMutate, refreshAuth } = useAdminAuth()
 
   const [data, setData] = useState(initialData)
-  const [addingId, setAddingId] = useState<number | null>(null)
+  const [loadingRepos, setLoadingRepos] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [addingGitId, setAddingGitId] = useState<number | null>(null)
+  const [editingGitId, setEditingGitId] = useState<number | null>(null)
+  const [externalAdd, setExternalAdd] = useState(false)
+  const [form, setForm] = useState(emptyForm)
+
+  const showRepoUrlInput =
+    externalAdd || (editingGitId !== null && editingGitId < 0)
 
   useEffect(() => {
     setData(initialData)
   }, [initialData])
 
-  async function handleAdd(project: AdminProject) {
+  useEffect(() => {
     if (!canMutate) return
 
-    setAddingId(project.git_id)
+    let cancelled = false
+
+    async function loadAuthenticatedProjects() {
+      setLoadingRepos(true)
+      const response = await API.get("/admin/projects")
+      if (!cancelled && response.ok) {
+        setData(await response.json())
+      }
+      if (!cancelled) setLoadingRepos(false)
+    }
+
+    loadAuthenticatedProjects()
+
+    return () => {
+      cancelled = true
+    }
+  }, [canMutate])
+
+  function openAdd(project: AdminProject) {
+    setExternalAdd(false)
+    setAddingGitId(project.git_id)
+    setEditingGitId(null)
+    setForm(projectFormFromGitHub(project))
+    setModalOpen(true)
+  }
+
+  function openExternalAdd() {
+    setExternalAdd(true)
+    setAddingGitId(null)
+    setEditingGitId(null)
+    setForm(emptyForm)
+    setModalOpen(true)
+  }
+
+  function openEdit(project: AdminProject) {
+    setExternalAdd(false)
+    setAddingGitId(null)
+    setEditingGitId(project.git_id)
+    setForm(projectFormFromVisible(project))
+    setModalOpen(true)
+  }
+
+  function closeModal() {
+    setModalOpen(false)
+    setExternalAdd(false)
+    setAddingGitId(null)
+    setEditingGitId(null)
+    setForm(emptyForm)
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!canMutate) return
+
+    const gitId = addingGitId ?? editingGitId
+    if (!externalAdd && gitId === null) return
+
+    setSubmitting(true)
+    const payload = buildPayload(form, showRepoUrlInput)
     const next = await adminMutation<ProjectsPageClientProps["initialData"]>(
-      () => API.post(`/admin/projects/${project.git_id}`, {}),
-      `"${project.name}" adicionado ao portfólio.`,
+      () => {
+        if (externalAdd) return API.post("/admin/projects/external", payload)
+        if (addingGitId !== null) return API.post(`/admin/projects/${addingGitId}`, payload)
+        return API.put(`/admin/projects/${gitId}`, payload)
+      },
+      externalAdd || addingGitId !== null
+        ? `"${payload.title}" adicionado ao portfólio.`
+        : `"${payload.title}" atualizado com sucesso.`,
     )
-    setAddingId(null)
+    setSubmitting(false)
     if (!next) return
     setData(next)
     await refreshAuth()
+    closeModal()
   }
 
   async function handleRemove(gitId: number) {
@@ -55,9 +174,11 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     <div>
       <PageHeader
         title="Projetos"
-        description="Selecione repositórios do GitHub para exibir no portfólio"
+        description="Selecione repositórios do GitHub ou cadastre projetos externos (GitLab, etc.)"
         icon={FolderGit2}
-        canMutate={false}
+        canMutate={canMutate}
+        onAdd={openExternalAdd}
+        addLabel="Projeto externo"
       />
 
       <div className="space-y-8 p-6 md:p-8">
@@ -65,6 +186,13 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
           <AlertBanner
             variant="info"
             message="Faça login para adicionar ou remover projetos visíveis."
+          />
+        )}
+
+        {canMutate && loadingRepos && (
+          <AlertBanner
+            variant="info"
+            message="Carregando repositórios privados do GitHub..."
           />
         )}
 
@@ -85,20 +213,30 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                   key={project.git_id}
                   className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
                 >
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="font-medium">{project.name}</p>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="space-y-1">
+                      <p className="font-medium">{project.title ?? project.name}</p>
+                      <ProjectMeta project={project} />
+                    </div>
+                    {project.description && (
+                      <p className="line-clamp-2 text-sm text-zinc-500">
+                        {project.description}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-3 text-sm">
-                      <a
-                        href={project.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-                      >
-                        Repositório
-                      </a>
-                      {project.homepage && (
+                      {(project.repo_url ?? project.html_url) && (
                         <a
-                          href={project.homepage}
+                          href={project.repo_url ?? project.html_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
+                        >
+                          Repositório
+                        </a>
+                      )}
+                      {(project.live_url ?? project.homepage) && (
+                        <a
+                          href={project.live_url ?? project.homepage ?? undefined}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
@@ -111,8 +249,8 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                   {canMutate && (
                     <RowActions
                       canMutate
+                      onEdit={() => openEdit(project)}
                       onDelete={() => handleRemove(project.git_id)}
-                      hideEdit
                     />
                   )}
                 </li>
@@ -138,8 +276,11 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                   key={project.git_id}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-zinc-200 p-4 dark:border-zinc-800"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium">{project.name}</p>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="space-y-1">
+                      <p className="font-medium">{project.name}</p>
+                      <ProjectMeta project={project} />
+                    </div>
                     <a
                       href={project.html_url}
                       target="_blank"
@@ -154,11 +295,10 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                       size="sm"
                       variant="outline"
                       className="gap-1.5"
-                      disabled={addingId === project.git_id}
-                      onClick={() => handleAdd(project)}
+                      onClick={() => openAdd(project)}
                     >
                       <Plus className="size-3.5" />
-                      {addingId === project.git_id ? "Adicionando..." : "Adicionar"}
+                      Adicionar
                     </Button>
                   )}
                 </li>
@@ -167,6 +307,64 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
           )}
         </section>
       </div>
+
+      <FormModal
+        open={modalOpen}
+        title={
+          externalAdd
+            ? "Adicionar projeto externo"
+            : addingGitId !== null
+              ? "Adicionar projeto"
+              : editingGitId !== null && editingGitId < 0
+                ? "Editar projeto externo"
+                : "Editar projeto"
+        }
+        submitting={submitting}
+        submitLabel={externalAdd || addingGitId !== null ? "Adicionar" : "Salvar"}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+      >
+        <Field label="Título">
+          <TextInput
+            required
+            value={form.title}
+            onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
+          />
+        </Field>
+        <Field label="Descrição">
+          <TextArea
+            value={form.description}
+            onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
+          />
+        </Field>
+        <Field label="URL da imagem">
+          <TextInput
+            type="url"
+            placeholder="https://..."
+            value={form.image_url}
+            onChange={(e) => setForm((current) => ({ ...current, image_url: e.target.value }))}
+          />
+        </Field>
+        <Field label="URL da demo (opcional)">
+          <TextInput
+            type="url"
+            placeholder="https://..."
+            value={form.live_url}
+            onChange={(e) => setForm((current) => ({ ...current, live_url: e.target.value }))}
+          />
+        </Field>
+        {showRepoUrlInput && (
+          <Field label="URL do repositório">
+            <TextInput
+              required
+              type="url"
+              placeholder="https://gitlab.com/..."
+              value={form.repo_url}
+              onChange={(e) => setForm((current) => ({ ...current, repo_url: e.target.value }))}
+            />
+          </Field>
+        )}
+      </FormModal>
     </div>
   )
 }
