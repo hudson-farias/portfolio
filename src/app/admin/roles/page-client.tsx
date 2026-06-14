@@ -12,6 +12,7 @@ import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
+import { roleIconNames } from "@/components/icons/map"
 import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
@@ -354,6 +355,7 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
         </Field>
         <Field label="Ícone">
           <IconSelect
+            options={roleIconNames}
             value={form.icon}
             onChange={(icon) => setForm((f) => ({ ...f, icon }))}
           />

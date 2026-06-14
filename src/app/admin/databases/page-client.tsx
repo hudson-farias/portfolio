@@ -17,7 +17,7 @@ import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
-import { skillIconNames } from "@/components/icons/map"
+import { databaseIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
 import { Button } from "@/components/ui/button"
 import { adminMutation } from "@/lib/admin/admin-toast"
@@ -257,7 +257,7 @@ export function DatabasesPageClient({ initialItems }: DatabasesPageClientProps) 
         <Field label="Ícone">
           <IconSelect
             required
-            options={skillIconNames}
+            options={databaseIconNames}
             value={form.icon}
             onChange={(icon) => setForm((f) => ({ ...f, icon }))}
           />

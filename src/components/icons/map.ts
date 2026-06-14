@@ -144,6 +144,58 @@ export const adminSocialIconNames = socialIconNames.filter(
   (name) => !profileContactIconNames.has(name),
 )
 
+export const languageIconNames = [
+  "csharp",
+  "css",
+  "html",
+  "javascript",
+  "nodejs",
+  "php",
+  "python",
+  "typescript",
+] as const
+
+export const frameworkIconNames = [
+  "dotnet",
+  "fastapi",
+  "laravel",
+  "nextjs",
+  "nodejs",
+  "react",
+  "tailwind",
+  "vite",
+] as const
+
+export const databaseIconNames = [
+  "database",
+  "mongodb",
+  "mysql",
+  "postgresql",
+  "redis",
+] as const
+
+export const skillIconNames = [
+  "api",
+  "arch",
+  "bot",
+  "code",
+  "database",
+  "globe",
+  "pipeline",
+  "server",
+] as const
+
+export const roleIconNames = [
+  "api",
+  "arch",
+  "bot",
+  "code",
+  "database",
+  "globe",
+  "pipeline",
+  "server",
+] as const
+
 export const toolIconNames = [
   "api",
   "arch",
@@ -170,10 +222,6 @@ export const toolIconNames = [
   "vscodium",
   "zsh",
 ] as const
-
-export const skillIconNames = iconNames.filter(
-  (name) => !socialIconNames.includes(name as (typeof socialIconNames)[number]),
-)
 
 export const iconMap: Record<string, IconComponent> = {
   api: Webhook,

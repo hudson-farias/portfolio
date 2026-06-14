@@ -17,7 +17,7 @@ import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
-import { skillIconNames } from "@/components/icons/map"
+import { frameworkIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
 import { Button } from "@/components/ui/button"
 import { adminMutation } from "@/lib/admin/admin-toast"
@@ -272,7 +272,7 @@ export function FrameworksPageClient({ initialItems, languages }: FrameworksPage
         <Field label="Ícone">
           <IconSelect
             required
-            options={skillIconNames}
+            options={frameworkIconNames}
             value={form.icon}
             onChange={(icon) => setForm((f) => ({ ...f, icon }))}
           />
