@@ -4,10 +4,23 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Reveal } from "../reveal"
 import { Button } from "@/components/ui/button"
+import { AppIcon } from "@/components/icons/app-icon"
 import type { SkillCategory } from "@/types"
 
 const GAP_PX = 16
 const TRAILING_PX = 32
+
+const skillTileClassName =
+  "surface flex min-h-[72px] flex-col items-center justify-center rounded-xl p-2.5 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md"
+
+function SkillTile({ name, icon }: { name: string; icon: string }) {
+  return (
+    <article className={skillTileClassName}>
+      <AppIcon name={icon} className="size-5" />
+      <span className="mt-1.5 text-xs font-medium leading-tight">{name}</span>
+    </article>
+  )
+}
 
 function SkillCard({
   category,
@@ -22,17 +35,12 @@ function SkillCard({
     <article
       data-skill-card
       style={cardWidth && cardWidth > 0 ? { width: cardWidth } : undefined}
-      className={`relative z-0 flex min-h-[160px] flex-col rounded-2xl surface p-6 transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg ${className}`}
+      className={`relative z-0 flex flex-col rounded-xl border border-border/50 bg-card/40 p-3 ${className}`}
     >
-      <h3 className="text-base font-semibold">{category.title}</h3>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <h3 className="text-sm font-semibold">{category.title}</h3>
+      <div className="mt-2.5 grid grid-cols-2 gap-2">
         {category.skills.map((skill) => (
-          <span
-            key={skill.id}
-            className="rounded-full border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
-          >
-            {skill.name}
-          </span>
+          <SkillTile key={skill.id} name={skill.name} icon={skill.icon} />
         ))}
       </div>
     </article>
@@ -53,7 +61,7 @@ function SkillsCarousel({ categories }: { categories: SkillCategory[] }) {
     if (!container) return
 
     const viewport = container.clientWidth
-    const perView = 1.5
+    const perView = 2.25
     const gaps = Math.floor(perView) * GAP_PX
     const card = (viewport - gaps) / perView
 

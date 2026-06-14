@@ -36,3 +36,10 @@ export interface SocialNetwork {
   url: string
   icon: string
 }
+
+export interface Tool {
+  id: number
+  name: string
+  icon: string
+  url?: string | null
+}

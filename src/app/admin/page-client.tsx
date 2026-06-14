@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-import { Briefcase, FolderGit2, Layers, Share2 } from "lucide-react"
+import { Briefcase, FolderGit2, Layers, Share2, Wrench } from "lucide-react"
 
 import type { AdminPageClientProps } from "./interfaces"
 
@@ -13,6 +13,7 @@ import { ExperiencesTable } from "./components/experiences-table"
 import { SkillsGrid } from "./components/skills-grid"
 import { ProjectsList } from "./components/projects-list"
 import { SocialNetworksTable } from "./components/social-networks-table"
+import { ToolsTable } from "./components/tools-table"
 
 export function AdminPageClient({ data }: AdminPageClientProps) {
     const { canMutate } = useAdminAuth()
@@ -38,10 +39,11 @@ export function AdminPageClient({ data }: AdminPageClientProps) {
                 </span>
             </header>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <StatCard label="Experiências" value={data.counts.experiences} />
                 <StatCard label="Skills" value={data.counts.skills} />
                 <StatCard label="Projetos" value={data.counts.projects} />
+                <StatCard label="Ferramentas" value={data.counts.tools} />
                 <StatCard label="Redes sociais" value={data.counts.social_networks} />
             </div>
 
@@ -79,6 +81,16 @@ export function AdminPageClient({ data }: AdminPageClientProps) {
                 href="/admin/skills"
             >
                 <SkillsGrid categories={data.skills} canMutate={false} />
+            </Section>
+
+            <Section
+                title="Ferramentas"
+                description="Ferramentas exibidas na landpage"
+                icon={Wrench}
+                canMutate={canMutate}
+                href="/admin/tools"
+            >
+                <ToolsTable items={data.tools} canMutate={false} />
             </Section>
 
             <Section

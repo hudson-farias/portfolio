@@ -6,11 +6,12 @@ import { Experiences } from "./components/page/experiences"
 import { Hero } from "./components/page/hero"
 import { Projects } from "./components/page/projects"
 import { Skills } from "./components/page/skills"
+import { Tools } from "./components/page/tools"
 import type { AboutStats, PageResponse } from "./interfaces"
 
 export default async function Home() {
   const response = await API.get("/landpage/page")
-  const { hero, about, skills, experiences, projects, contact }: PageResponse = await response.json()
+  const { hero, about, skills, tools, experiences, projects, contact }: PageResponse = await response.json()
 
   const aboutStats: AboutStats = {
     yearsExperience: about.stats.years_experience,
@@ -28,6 +29,7 @@ export default async function Home() {
         profileName={about.profile_name}
       />
       <Skills categories={skills.skills} />
+      <Tools tools={tools.tools} />
       <Experiences experiences={experiences.experiences} />
       <Projects projects={projects.projects} />
       <Contact contact={contact} />

@@ -11,6 +11,7 @@ const navItems = [
   { label: "Home", href: "#hero" },
   { label: "Sobre", href: "#about" },
   { label: "Skills", href: "#skills" },
+  { label: "Ferramentas", href: "#tools" },
   { label: "Experiência", href: "#experience" },
   { label: "Projetos", href: "#projects" },
   { label: "Contato", href: "#contact" },

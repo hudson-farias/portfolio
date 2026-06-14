@@ -8,6 +8,7 @@ import type { FooterResponse } from "../../interfaces"
 const footerLinks = [
   { label: "Sobre", href: "#about" },
   { label: "Skills", href: "#skills" },
+  { label: "Ferramentas", href: "#tools" },
   { label: "Experiência", href: "#experience" },
   { label: "Projetos", href: "#projects" },
   { label: "Contato", href: "#contact" },
