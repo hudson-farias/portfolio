@@ -1,5 +1,7 @@
 const AUTH_COOKIE = 'ACCESS_TOKEN_ADMIN'
 
+type SearchParams = Record<string, string | string[] | undefined>
+
 class ApiClient {
   private baseURL: string
 
@@ -16,6 +18,23 @@ class ApiClient {
       headers['Content-Type'] = 'application/json'
     }
     return headers
+  }
+
+  private withQuery(endpoint: string, query?: string | SearchParams) {
+    if (!query) return endpoint
+
+    if (typeof query === 'string') {
+      return query ? `${endpoint}?${query}` : endpoint
+    }
+
+    const search = new URLSearchParams()
+
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value === 'string' && value) search.set(key, value)
+    }
+
+    const qs = search.toString()
+    return qs ? `${endpoint}?${qs}` : endpoint
   }
 
   private async request(method: string, endpoint: string, body?: unknown): Promise<Response> {
@@ -38,8 +57,8 @@ class ApiClient {
     return response.status === 204
   }
 
-  get(endpoint: string): Promise<Response> {
-    return this.request('GET', endpoint)
+  get(endpoint: string, query?: string | SearchParams): Promise<Response> {
+    return this.request('GET', this.withQuery(endpoint, query))
   }
 
   post(endpoint: string, body: unknown): Promise<Response> {

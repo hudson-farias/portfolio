@@ -1,14 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { Layers } from "lucide-react"
 
 import { API } from "@/api/client"
 import type { AdminSkill, SkillForm, SkillsPageClientProps } from "./interfaces"
-
+import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
+import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { Field, SelectInput, TextInput } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
@@ -16,7 +18,9 @@ import { AppIcon } from "@/components/icons/app-icon"
 import { skillIconNames } from "@/components/icons/map"
 import { IconSelect } from "../components/icon-select"
 import { RowActions } from "../components/row-actions"
-import { adminMutation } from "../lib/admin-toast"
+import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
+import { adminMutation } from "@/lib/admin/admin-toast"
+import { useAdminFilters } from "@/lib/admin/use-admin-filters"
 
 const emptyForm: SkillForm = {
   name: "",
@@ -25,23 +29,20 @@ const emptyForm: SkillForm = {
 }
 
 export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
+  const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
 
-  const [data, setData] = useState(initialData)
+  const { filters, setFilters, clearFilters, queryString } = useAdminFilters(FILTER_DEFAULTS)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
 
-  useEffect(() => {
-    setData(initialData)
-  }, [initialData])
-
   function openCreate() {
     setEditingId(null)
     setForm({
       ...emptyForm,
-      skill_category_id: data.categories[0]?.id ?? 0,
+      skill_category_id: initialData.categories[0]?.id ?? 0,
     })
     setModalOpen(true)
   }
@@ -72,7 +73,7 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
       setSubmitting(false)
       return
     }
-    setData(next)
+    router.refresh()
     await refreshAuth()
     setModalOpen(false)
     setSubmitting(false)
@@ -82,19 +83,18 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
     if (!canMutate) return
     if (!window.confirm("Excluir esta skill?")) return
 
-    const next = await adminMutation<SkillsPageClientProps["initialData"]>(
-      () => API.delete(`/admin/skills/${id}`),
-      "Skill excluída com sucesso.",
-    )
+    const next = await adminMutation<SkillsPageClientProps["initialData"]>(() => API.delete(`/admin/skills/${id}`), "Skill excluída com sucesso.")
     if (!next) return
-    setData(next)
+    router.refresh()
     await refreshAuth()
   }
 
-  const skillsByCategory = data.categories.map((category) => ({
+  const skillsByCategory = initialData.categories.map((category) => ({
     category,
-    skills: data.skills.filter((skill) => skill.skill_category_id === category.id),
+    skills: initialData.skills.filter((skill) => skill.skill_category_id === category.id),
   }))
+
+  const visibleSkills = queryString ? initialData.skills : skillsByCategory.flatMap(({ skills }) => skills)
 
   return (
     <div>
@@ -111,47 +111,60 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
           <AlertBanner variant="info" message="Faça login para criar, editar ou excluir skills." />
         )}
 
-        {data.skills.length === 0 ? (
-          <p className="text-sm text-zinc-500">Nenhuma skill cadastrada.</p>
+        <AdminListFilters
+          search={filters.q}
+          onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
+          onClear={clearFilters}
+        >
+          <AdminFilterField label="Categoria">
+            <AdminFilterSelect
+              value={filters.skill_category_id}
+              onValueChange={(skill_category_id) => setFilters((current) => ({ ...current, skill_category_id }))}
+              options={[
+                { value: "", label: "Todas" },
+                ...initialData.categories.map((category) => ({
+                  value: String(category.id),
+                  label: category.title,
+                })),
+              ]}
+            />
+          </AdminFilterField>
+        </AdminListFilters>
+
+        {visibleSkills.length === 0 ? (
+          <p className="text-sm text-zinc-500">Nenhuma skill encontrada.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
-                  <th className="pb-3 pr-4 font-medium">Skill</th>
-                  <th className="pb-3 pr-4 font-medium">Categoria</th>
-                  {canMutate && <th className="pb-3 font-medium">Ações</th>}
+          <AdminTable>
+            <thead>
+              <tr className={adminHeadRow}>
+                <th className={adminTh()}>Skill</th>
+                <th className={adminTh("w-48")}>Categoria</th>
+                {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleSkills.map((skill) => (
+                <tr key={skill.id} className={adminBodyRow}>
+                  <td className={adminTd()}>
+                    <span className="inline-flex items-center gap-2.5 font-medium">
+                      <AppIcon name={skill.icon} className="size-4 shrink-0" />
+                      {skill.name}
+                    </span>
+                  </td>
+                  <td className={adminTd("text-zinc-500")}>{skill.skill_category_name}</td>
+                  {canMutate && (
+                    <td className={adminTd()}>
+                      <RowActions
+                        canMutate
+                        onEdit={() => openEdit(skill)}
+                        onDelete={() => handleDelete(skill.id)}
+                      />
+                    </td>
+                  )}
                 </tr>
-              </thead>
-              <tbody>
-                {skillsByCategory.flatMap(({ category, skills }) =>
-                  skills.map((skill) => (
-                    <tr
-                      key={skill.id}
-                      className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/80"
-                    >
-                      <td className="py-3 pr-4">
-                        <span className="inline-flex items-center gap-2.5 font-medium">
-                          <AppIcon name={skill.icon} className="size-4 shrink-0" />
-                          {skill.name}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4 text-zinc-500">{category.title}</td>
-                      {canMutate && (
-                        <td className="py-3">
-                          <RowActions
-                            canMutate
-                            onEdit={() => openEdit(skill)}
-                            onDelete={() => handleDelete(skill.id)}
-                          />
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </AdminTable>
         )}
       </div>
 
@@ -185,7 +198,7 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
               setForm((f) => ({ ...f, skill_category_id: Number(e.target.value) }))
             }
           >
-            {data.categories.map((category) => (
+            {initialData.categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.title}
               </option>

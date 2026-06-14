@@ -2,6 +2,8 @@ import { cookies } from 'next/headers'
 
 import { AUTH_COOKIE } from './client'
 
+type SearchParams = Record<string, string | string[] | undefined>
+
 class ApiServer {
   private baseURL: string
 
@@ -16,6 +18,23 @@ class ApiServer {
     return {
       ...(token ? { Cookie: `${AUTH_COOKIE}=${token}` } : {}),
     }
+  }
+
+  private withQuery(endpoint: string, query?: string | SearchParams) {
+    if (!query) return endpoint
+
+    if (typeof query === 'string') {
+      return query ? `${endpoint}?${query}` : endpoint
+    }
+
+    const search = new URLSearchParams()
+
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value === 'string' && value) search.set(key, value)
+    }
+
+    const qs = search.toString()
+    return qs ? `${endpoint}?${qs}` : endpoint
   }
 
   async request(method: string, endpoint: string, body?: unknown): Promise<Response> {
@@ -34,8 +53,13 @@ class ApiServer {
     })
   }
 
-  get(endpoint: string): Promise<Response> {
-    return this.request('GET', endpoint)
+  get(endpoint: string, query?: string | SearchParams): Promise<Response> {
+    return this.request('GET', this.withQuery(endpoint, query))
+  }
+
+  async checkAuth(): Promise<boolean> {
+    const response = await this.get('/auth/verify')
+    return response.status === 204
   }
 
   post(endpoint: string, body: unknown): Promise<Response> {

@@ -1,22 +1,38 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { BadgeCheck } from "lucide-react"
 
 import { API } from "@/api/client"
 import type { AdminRole, LocaleOption, RoleForm, RoleSeniority, RolesPageClientProps, SeniorityOption } from "./interfaces"
-
+import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
-
 import { AlertBanner } from "../components/alert-banner"
+import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
 import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
-import { adminMutation } from "../lib/admin-toast"
+import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
+import { adminMutation } from "@/lib/admin/admin-toast"
+import { useAdminFilters } from "@/lib/admin/use-admin-filters"
 import { AppIcon } from "@/components/icons/app-icon"
+
+const FILTER_LOCALES: LocaleOption[] = [
+  { value: "", label: "Todos os locales" },
+  { value: "pt", label: "PT" },
+  { value: "en", label: "EN" },
+  { value: "none", label: "Sem locale" },
+]
+
+const BOOL_FILTER_OPTIONS = [
+  { value: "", label: "Todos" },
+  { value: "true", label: "Sim" },
+  { value: "false", label: "Não" },
+]
 
 const LOCALES: LocaleOption[] = [
   { value: "", label: "Todos" },
@@ -79,17 +95,14 @@ function formToPayload(form: RoleForm) {
 }
 
 export function RolesPageClient({ initialItems }: RolesPageClientProps) {
+  const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
 
-  const [items, setItems] = useState(initialItems)
+  const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
-
-  useEffect(() => {
-    setItems(initialItems)
-  }, [initialItems])
 
   function openCreate() {
     setEditingId(null)
@@ -132,7 +145,7 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
       setSubmitting(false)
       return
     }
-    setItems(data)
+    router.refresh()
     await refreshAuth()
     setModalOpen(false)
     setSubmitting(false)
@@ -147,7 +160,7 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
       "Cargo excluído com sucesso.",
     )
     if (!data) return
-    setItems(data)
+    router.refresh()
     await refreshAuth()
   }
 
@@ -169,67 +182,98 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
           />
         )}
 
-        {items.length === 0 ? (
+        <AdminListFilters
+          search={filters.q}
+          onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
+          onClear={clearFilters}
+        >
+          <AdminFilterField label="Locale">
+            <AdminFilterSelect
+              value={filters.locale}
+              onValueChange={(locale) => setFilters((current) => ({ ...current, locale }))}
+              options={FILTER_LOCALES.map(({ value, label }) => ({ value: value ?? "", label }))}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Senioridade">
+            <AdminFilterSelect
+              value={filters.seniority}
+              onValueChange={(seniority) => setFilters((current) => ({ ...current, seniority }))}
+              options={[{ value: "", label: "Todas" }, ...SENIORITIES]}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Exibir">
+            <AdminFilterSelect
+              value={filters.show}
+              onValueChange={(show) => setFilters((current) => ({ ...current, show }))}
+              options={BOOL_FILTER_OPTIONS}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Ativo">
+            <AdminFilterSelect
+              value={filters.active}
+              onValueChange={(active) => setFilters((current) => ({ ...current, active }))}
+              options={BOOL_FILTER_OPTIONS}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Destaque">
+            <AdminFilterSelect
+              value={filters.featured}
+              onValueChange={(featured) => setFilters((current) => ({ ...current, featured }))}
+              options={BOOL_FILTER_OPTIONS}
+            />
+          </AdminFilterField>
+        </AdminListFilters>
+
+        {initialItems.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhum cargo cadastrado.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
-                  <th className="pb-3 pr-4 font-medium">Título</th>
-                  <th className="pb-3 pr-4 font-medium">Locale</th>
-                  <th className="pb-3 pr-4 font-medium">Categoria</th>
-                  <th className="pb-3 pr-4 font-medium">Senioridade</th>
-                  <th className="pb-3 pr-4 font-medium">Exibir</th>
-                  <th className="pb-3 pr-4 font-medium">Experiências</th>
-                  <th className="pb-3 pr-4 font-medium">Ordem</th>
-                  {canMutate && <th className="pb-3 font-medium">Ações</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/80"
-                  >
-                    <td className="py-3 pr-4">
-                      <div className="flex items-center gap-2 font-medium">
-                        {item.icon && <AppIcon name={item.icon} className="size-4" />}
-                        {item.color && (
-                          <span
-                            className="size-3 rounded-full border border-zinc-300 dark:border-zinc-600"
-                            style={{ backgroundColor: item.color }}
-                          />
-                        )}
-                        {item.title}
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-zinc-500">
-                      {localeLabel(item.locale)}
-                    </td>
-                    <td className="py-3 pr-4 text-zinc-600 dark:text-zinc-400">
-                      {item.category ?? "—"}
-                    </td>
-                    <td className="py-3 pr-4 text-zinc-600 dark:text-zinc-400">
-                      {item.seniority ?? "—"}
-                    </td>
-                    <td className="py-3 pr-4">{boolBadge(item.show)}</td>
-                    <td className="py-3 pr-4 text-zinc-500">{item.experience_count}</td>
-                    <td className="py-3 pr-4 text-zinc-500">{item.sort_order}</td>
-                    {canMutate && (
-                      <td className="py-3">
-                        <RowActions
-                          canMutate
-                          onEdit={() => openEdit(item)}
-                          onDelete={() => handleDelete(item.id)}
+          <AdminTable scrollable>
+            <thead>
+              <tr className={adminHeadRow}>
+                <th className={adminTh("min-w-48")}>Título</th>
+                <th className={adminTh("w-24")}>Locale</th>
+                <th className={adminTh("w-32")}>Categoria</th>
+                <th className={adminTh("w-28")}>Senioridade</th>
+                <th className={adminTh("w-20")}>Exibir</th>
+                <th className={adminTh("w-28")}>Experiências</th>
+                <th className={adminTh("w-20")}>Ordem</th>
+                {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {initialItems.map((item) => (
+                <tr key={item.id} className={adminBodyRow}>
+                  <td className={adminTd()}>
+                    <div className="flex items-center gap-2 font-medium">
+                      {item.icon && <AppIcon name={item.icon} className="size-4" />}
+                      {item.color && (
+                        <span
+                          className="size-3 rounded-full border border-zinc-300 dark:border-zinc-600"
+                          style={{ backgroundColor: item.color }}
                         />
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                      {item.title}
+                    </div>
+                  </td>
+                  <td className={adminTd("text-zinc-500")}>{localeLabel(item.locale)}</td>
+                  <td className={adminTd("text-zinc-600 dark:text-zinc-400")}>{item.category ?? "—"}</td>
+                  <td className={adminTd("text-zinc-600 dark:text-zinc-400")}>{item.seniority ?? "—"}</td>
+                  <td className={adminTd()}>{boolBadge(item.show)}</td>
+                  <td className={adminTd("text-zinc-500")}>{item.experience_count}</td>
+                  <td className={adminTd("text-zinc-500")}>{item.sort_order}</td>
+                  {canMutate && (
+                    <td className={adminTd()}>
+                      <RowActions
+                        canMutate
+                        onEdit={() => openEdit(item)}
+                        onDelete={() => handleDelete(item.id)}
+                      />
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </AdminTable>
         )}
       </div>
 

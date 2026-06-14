@@ -1,20 +1,28 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { Briefcase } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminExperience, ContractType, ContractTypeOption, ExperienceForm, ExperiencesPageClientProps, } from "./interfaces"
-
+import type { AdminExperience, AdminExperiences, ContractType, ContractTypeOption, ExperienceForm, ExperiencesPageClientProps } from "./interfaces"
+import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
-
 import { AlertBanner } from "../components/alert-banner"
+import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { ExperiencesTable } from "../components/experiences-table"
-import { adminMutation } from "../lib/admin-toast"
+import { adminMutation } from "@/lib/admin/admin-toast"
+import { useAdminFilters } from "@/lib/admin/use-admin-filters"
+
+const BOOL_FILTER_OPTIONS = [
+  { value: "", label: "Todas" },
+  { value: "false", label: "Visíveis" },
+  { value: "true", label: "Ocultas" },
+]
 
 const CONTRACT_TYPES: ContractTypeOption[] = [
   { value: "CLT", label: "CLT" },
@@ -31,18 +39,24 @@ const emptyForm: ExperienceForm = {
   hidden: false,
 }
 
-export function ExperiencesPageClient({ initialItems, roles }: ExperiencesPageClientProps) {
-  const { canMutate, refreshAuth } = useAdminAuth()
+const emptyData: AdminExperiences = { experiences: [], roles: [] }
 
-  const [items, setItems] = useState(initialItems)
+export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProps) {
+  const router = useRouter()
+  const { canMutate, refreshAuth } = useAdminAuth()
+  const [data, setData] = useState(initialData ?? emptyData)
+
+  useEffect(() => {
+    if (initialData) setData(initialData)
+  }, [initialData])
+
+  const { experiences: initialItems, roles } = data
+
+  const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
-
-  useEffect(() => {
-    setItems(initialItems)
-  }, [initialItems])
 
   function openCreate() {
     setEditingId(null)
@@ -83,7 +97,7 @@ export function ExperiencesPageClient({ initialItems, roles }: ExperiencesPageCl
 
     setSubmitting(true)
     const payload = buildPayload()
-    const data = await adminMutation<AdminExperience[]>(
+    const data = await adminMutation<AdminExperiences>(
       () =>
         editingId !== null
           ? API.put(`/admin/experiences/${editingId}`, payload)
@@ -94,7 +108,7 @@ export function ExperiencesPageClient({ initialItems, roles }: ExperiencesPageCl
       setSubmitting(false)
       return
     }
-    setItems(data)
+    router.refresh()
     await refreshAuth()
     setModalOpen(false)
     setSubmitting(false)
@@ -104,12 +118,12 @@ export function ExperiencesPageClient({ initialItems, roles }: ExperiencesPageCl
     if (!canMutate) return
     if (!window.confirm("Excluir esta experiência?")) return
 
-    const data = await adminMutation<AdminExperience[]>(
+    const data = await adminMutation<AdminExperiences>(
       () => API.delete(`/admin/experiences/${id}`),
       "Experiência excluída com sucesso.",
     )
     if (!data) return
-    setItems(data)
+    router.refresh()
     await refreshAuth()
   }
 
@@ -138,11 +152,42 @@ export function ExperiencesPageClient({ initialItems, roles }: ExperiencesPageCl
           />
         )}
 
-        {items.length === 0 ? (
+        <AdminListFilters
+          search={filters.q}
+          onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
+          onClear={clearFilters}
+        >
+          <AdminFilterField label="Cargo">
+            <AdminFilterSelect
+              value={filters.role_id}
+              onValueChange={(role_id) => setFilters((current) => ({ ...current, role_id }))}
+              options={[
+                { value: "", label: "Todos" },
+                ...roles.map((role) => ({ value: String(role.id), label: role.title })),
+              ]}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Contrato">
+            <AdminFilterSelect
+              value={filters.contract_type}
+              onValueChange={(contract_type) => setFilters((current) => ({ ...current, contract_type }))}
+              options={[{ value: "", label: "Todos" }, ...CONTRACT_TYPES]}
+            />
+          </AdminFilterField>
+          <AdminFilterField label="Status">
+            <AdminFilterSelect
+              value={filters.hidden}
+              onValueChange={(hidden) => setFilters((current) => ({ ...current, hidden }))}
+              options={BOOL_FILTER_OPTIONS}
+            />
+          </AdminFilterField>
+        </AdminListFilters>
+
+        {initialItems.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhuma experiência cadastrada.</p>
         ) : (
           <ExperiencesTable
-            items={items}
+            items={initialItems}
             canMutate={canMutate}
             onEdit={(item) => openEdit(item as AdminExperience)}
             onDelete={handleDelete}

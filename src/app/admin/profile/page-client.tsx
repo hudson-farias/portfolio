@@ -12,7 +12,7 @@ import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { CheckboxField, Field, TextArea, TextInput, WhatsAppInput } from "../components/form-fields"
 import { PageHeader } from "../components/page-header"
-import { adminMutation } from "../lib/admin-toast"
+import { adminMutation } from "../../../lib/admin/admin-toast"
 import { Button } from "@/components/ui/button"
 
 function profileToForm(profile: AdminProfile): ProfileForm {

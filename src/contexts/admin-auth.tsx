@@ -12,8 +12,8 @@ type AdminAuthContextValue = {
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null)
 
-export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
-  const [canMutate, setCanMutate] = useState(false)
+export function AdminAuthProvider({ children, initialCanMutate = false }: { children: React.ReactNode; initialCanMutate?: boolean }) {
+  const [canMutate, setCanMutate] = useState(initialCanMutate)
 
   const refreshAuth = useCallback(async () => {
     const auth = await API.checkAuth()

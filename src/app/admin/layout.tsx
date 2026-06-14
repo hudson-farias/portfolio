@@ -3,16 +3,22 @@ import { Suspense } from "react"
 
 import { ArrowLeft } from "lucide-react"
 
+import { API } from "@/api/server"
+
 import { AdminAuthProvider } from "@/contexts/admin-auth"
 
 import { AdminNav } from "./components/admin-nav"
 import { AdminToaster } from "./components/admin-toaster"
 import { AdminLayoutClient } from "./layout-client"
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export const dynamic = "force-dynamic"
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const canMutate = await API.checkAuth()
+
   return (
     <Suspense fallback={null}>
-      <AdminAuthProvider>
+      <AdminAuthProvider initialCanMutate={canMutate}>
         <div className="flex min-h-screen bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
           <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div className="border-b border-zinc-200 px-5 py-5 dark:border-zinc-800">

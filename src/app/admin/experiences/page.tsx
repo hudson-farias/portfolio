@@ -1,17 +1,30 @@
 import { API } from "@/api/server"
-
 import { ExperiencesPageClient } from "./page-client"
-import type { AdminExperience } from "./interfaces"
-import type { AdminRole } from "../roles/interfaces"
+import type { AdminExperiences } from "./interfaces"
 
-export default async function ExperiencesPage() {
-  const [experiencesRes, rolesRes] = await Promise.all([
-    API.get("/admin/experiences"),
-    API.get("/admin/roles"),
-  ])
+export const dynamic = "force-dynamic"
 
-  const items: AdminExperience[] = await experiencesRes.json()
-  const roles: AdminRole[] = await rolesRes.json()
+const emptyData: AdminExperiences = { experiences: [], roles: [] }
 
-  return <ExperiencesPageClient initialItems={items} roles={roles} />
+function normalizeExperiencesPayload(raw: unknown): AdminExperiences {
+  if (Array.isArray(raw)) return { experiences: raw, roles: [] }
+
+  if (raw && typeof raw === "object" && "experiences" in raw) {
+    const payload = raw as AdminExperiences
+    return {
+      experiences: payload.experiences ?? [],
+      roles: payload.roles ?? [],
+    }
+  }
+
+  return emptyData
+}
+
+export default async function ExperiencesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const response = await API.get("/admin/experiences", await searchParams)
+  if (!response.ok) return <ExperiencesPageClient initialData={emptyData} />
+
+  const initialData = normalizeExperiencesPayload(await response.json())
+
+  return <ExperiencesPageClient initialData={initialData} />
 }

@@ -200,6 +200,24 @@ export const Header = () => {
 
 Exceção aceitável: `export default async function Page()` em `page.tsx` / `layout.tsx` (rotas Next).
 
+### Assinaturas de funções
+
+Manter **todos os parâmetros na mesma linha** — sem quebra nos params, inclusive tipo inline de props.
+
+```tsx
+// ❌ EVITAR
+export default async function SkillsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+
+// ✅ OK
+export default async function SkillsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+```
+
+Vale para componentes, handlers e funções utilitárias.
+
 ### Imports em uma linha
 
 Cada `import` deve ocupar **uma única linha**, sem quebra.
@@ -216,3 +234,28 @@ import type { PortfolioData } from "@/lib/types"
 ```
 
 Ordem sugerida: pacotes externos → aliases `@/...` → `import type`.
+
+### Fetch e erros — sem `try/catch` desnecessário
+
+Não envolver fetch/API em `try/catch` só para tratar HTTP. Use `response.ok` e trate o corpo de erro quando `!response.ok`.
+
+`try/catch` só quando realmente necessário (ex.: `JSON.parse` de dado não confiável, `new URL()` com input inválido).
+
+```ts
+// ❌ EVITAR
+try {
+  const response = await API.post("/admin/roles", payload)
+  if (!response.ok) { ... }
+} catch {
+  toast.error("Erro inesperado")
+}
+
+// ✅ OK
+const response = await API.post("/admin/roles", payload)
+if (!response.ok) {
+  adminToast.error(await extractErrorMessage(response))
+  return null
+}
+```
+
+Padrão do admin: `adminMutation` em `src/lib/admin/admin-toast.ts`.

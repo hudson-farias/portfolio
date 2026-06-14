@@ -5,19 +5,17 @@ import { useEffect, useState } from "react"
 import { FolderGit2, Plus } from "lucide-react"
 
 import { API } from "@/api/client"
-import type {
-  AdminProject,
-  ProjectForm,
-  ProjectsPageClientProps,
-} from "./interfaces"
+
+import type { AdminProject, ProjectForm, ProjectsPageClientProps } from "./interfaces"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
+
 import { AlertBanner } from "../components/alert-banner"
 import { Field, TextArea, TextInput } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
-import { adminMutation } from "../lib/admin-toast"
+import { adminMutation } from "../../../lib/admin/admin-toast"
 import { Button } from "@/components/ui/button"
 import { ProjectMeta } from "./project-meta"
 
@@ -63,7 +61,6 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
   const { canMutate, refreshAuth } = useAdminAuth()
 
   const [data, setData] = useState(initialData)
-  const [loadingRepos, setLoadingRepos] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [addingGitId, setAddingGitId] = useState<number | null>(null)
@@ -77,27 +74,6 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
   useEffect(() => {
     setData(initialData)
   }, [initialData])
-
-  useEffect(() => {
-    if (!canMutate) return
-
-    let cancelled = false
-
-    async function loadAuthenticatedProjects() {
-      setLoadingRepos(true)
-      const response = await API.get("/admin/projects")
-      if (!cancelled && response.ok) {
-        setData(await response.json())
-      }
-      if (!cancelled) setLoadingRepos(false)
-    }
-
-    loadAuthenticatedProjects()
-
-    return () => {
-      cancelled = true
-    }
-  }, [canMutate])
 
   function openAdd(project: AdminProject) {
     setExternalAdd(false)
@@ -186,13 +162,6 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
           <AlertBanner
             variant="info"
             message="Faça login para adicionar ou remover projetos visíveis."
-          />
-        )}
-
-        {canMutate && loadingRepos && (
-          <AlertBanner
-            variant="info"
-            message="Carregando repositórios privados do GitHub..."
           />
         )}
 

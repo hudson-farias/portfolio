@@ -1,27 +1,27 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { Share2 } from "lucide-react"
 
 import { API } from "@/api/client"
-import type {
-  AdminSocialNetwork,
-  SocialNetworkForm,
-  SocialNetworksPageClientProps,
-} from "./interfaces"
-
+import type { AdminSocialNetwork, SocialNetworkForm, SocialNetworksPageClientProps } from "./interfaces"
+import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
-import { CheckboxField, Field, TextInput } from "../components/form-fields"
+import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
+import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
+import { CheckboxField, Field, SelectInput, TextInput } from "../components/form-fields"
 import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
 import { adminSocialIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
-import { adminMutation, adminToast } from "../lib/admin-toast"
-import { formatLandpageSections, LANDPAGE_SECTIONS } from "../lib/landpage-sections"
+import { adminMutation, adminToast } from "@/lib/admin/admin-toast"
+import { useAdminFilters } from "@/lib/admin/use-admin-filters"
+import { formatLandpageSections, LANDPAGE_SECTIONS } from "@/lib/admin/landpage-sections"
 
 const emptyForm: SocialNetworkForm = {
   url: "",
@@ -30,17 +30,14 @@ const emptyForm: SocialNetworkForm = {
 }
 
 export function SocialNetworksPageClient({ initialItems }: SocialNetworksPageClientProps) {
+  const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
 
-  const [items, setItems] = useState(initialItems)
+  const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
-
-  useEffect(() => {
-    setItems(initialItems)
-  }, [initialItems])
 
   function openCreate() {
     setEditingId(null)
@@ -87,7 +84,7 @@ export function SocialNetworksPageClient({ initialItems }: SocialNetworksPageCli
       setSubmitting(false)
       return
     }
-    setItems(data)
+    router.refresh()
     await refreshAuth()
     setModalOpen(false)
     setSubmitting(false)
@@ -102,7 +99,7 @@ export function SocialNetworksPageClient({ initialItems }: SocialNetworksPageCli
       "Rede social excluída com sucesso.",
     )
     if (!data) return
-    setItems(data)
+    router.refresh()
     await refreshAuth()
   }
 
@@ -124,57 +121,69 @@ export function SocialNetworksPageClient({ initialItems }: SocialNetworksPageCli
           />
         )}
 
-        {items.length === 0 ? (
+        <AdminListFilters
+          search={filters.q}
+          onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
+          onClear={clearFilters}
+        >
+          <AdminFilterField label="Seção">
+            <AdminFilterSelect
+              value={filters.position}
+              onValueChange={(position) => setFilters((current) => ({ ...current, position }))}
+              options={[
+                { value: "", label: "Todas" },
+                ...LANDPAGE_SECTIONS.map(({ id, label }) => ({ value: id, label })),
+              ]}
+            />
+          </AdminFilterField>
+        </AdminListFilters>
+
+        {initialItems.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhuma rede social cadastrada.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-zinc-500 dark:border-zinc-800">
-                  <th className="pb-3 pr-4 font-medium">Ícone</th>
-                  <th className="pb-3 pr-4 font-medium">URL</th>
-                  <th className="pb-3 pr-4 font-medium">Seções</th>
-                  {canMutate && <th className="pb-3 font-medium">Ações</th>}
+          <AdminTable>
+            <thead>
+              <tr className={adminHeadRow}>
+                <th className={adminTh("w-12")}>Ícone</th>
+                <th className={adminTh()}>URL</th>
+                <th className={adminTh("w-48")}>Seções</th>
+                {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {initialItems.map((item) => (
+                <tr key={item.id} className={adminBodyRow}>
+                  <td className={adminTd()}>
+                    <AppIcon name={item.icon} className="size-4" />
+                  </td>
+                  <td className={adminTd()}>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="break-all text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
+                    >
+                      {item.url}
+                    </a>
+                  </td>
+                  <td className={adminTd()}>
+                    <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium dark:bg-zinc-800">
+                      {formatLandpageSections(item.positions)}
+                    </span>
+                  </td>
+                  {canMutate && (
+                    <td className={adminTd()}>
+                      <RowActions
+                        canMutate
+                        onEdit={() => openEdit(item)}
+                        onDelete={() => handleDelete(item.id)}
+                      />
+                    </td>
+                  )}
                 </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/80"
-                  >
-                    <td className="py-3 pr-4">
-                      <AppIcon name={item.icon} className="size-4" />
-                    </td>
-                    <td className="py-3 pr-4">
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="break-all text-zinc-600 underline-offset-4 hover:underline dark:text-zinc-400"
-                      >
-                        {item.url}
-                      </a>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium dark:bg-zinc-800">
-                        {formatLandpageSections(item.positions)}
-                      </span>
-                    </td>
-                    {canMutate && (
-                      <td className="py-3">
-                        <RowActions
-                          canMutate
-                          onEdit={() => openEdit(item)}
-                          onDelete={() => handleDelete(item.id)}
-                        />
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </AdminTable>
         )}
       </div>
 
