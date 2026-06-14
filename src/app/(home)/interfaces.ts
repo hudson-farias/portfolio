@@ -1,4 +1,4 @@
-import type { Experience, Project, SkillCategory, SocialNetwork, Tool } from "@/types"
+import type { Experience, Project, Skill, SocialNetwork, Tool } from "@/types"
 export type { SocialNetwork } from "@/types"
 
 export interface Stats {
@@ -33,7 +33,7 @@ export interface ExperiencesResponse {
 }
 
 export interface SkillsResponse {
-  skills: SkillCategory[]
+  skills: Skill[]
   social_networks: SocialNetwork[]
 }
 
@@ -105,7 +105,7 @@ export interface LandpageResponse {
 }
 
 export interface ApiResponse {
-  skills: SkillCategory[]
+  skills: Skill[]
   experiences: Experience[]
   projects: Project[]
 }

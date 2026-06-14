@@ -134,12 +134,36 @@
   html {
     @apply font-sans scroll-smooth;
   }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  label:has(> input[type="checkbox"]:not(:disabled)),
+  label:has(> input[type="radio"]:not(:disabled)),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @layer utilities {
   .surface {
     @apply border bg-card;
     box-shadow: var(--surface-shadow);
+  }
+
+  .surface-tile {
+    @apply cursor-default;
+  }
+
+  .surface-card-static {
+    @apply cursor-default;
   }
 }
 

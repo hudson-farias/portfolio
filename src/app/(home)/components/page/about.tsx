@@ -61,7 +61,7 @@ export const About = ({
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="surface inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-[transform,colors] hover:-translate-y-0.5 hover:border-foreground/20 hover:text-foreground"
+                  className="surface inline-flex size-10 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-[transform,colors] hover:-translate-y-0.5 hover:border-foreground/20 hover:text-foreground"
                   aria-label={formatSocialAriaLabel(link.icon, profileName)}
                 >
                   <AppIcon name={link.icon} className="size-4" />

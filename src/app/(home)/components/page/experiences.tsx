@@ -2,15 +2,33 @@
 
 import { Reveal } from "../reveal"
 import { SanitizedHtml } from "@/components/sanitized-html"
+import { SectionCta } from "../section-cta"
 import type { Experience } from "@/types"
 
-export const Experiences = ({ experiences }: { experiences: Experience[] }) => {
+export const Experiences = ({
+  experiences,
+  limit,
+  ctaHref,
+  ctaLabel = "Ver experiência completa",
+  embedded = false,
+}: {
+  experiences: Experience[]
+  limit?: number
+  ctaHref?: string
+  ctaLabel?: string
+  embedded?: boolean
+}) => {
+  const visibleExperiences = limit ? experiences.slice(0, limit) : experiences
+
+  const heading = (
+    <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
+      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Experiência</h2>
+      <p className="text-muted-foreground">Trajetória profissional e principais atuações.</p>
+    </Reveal>
+  )
   return (
     <section id="experience" className="scroll-mt-28 space-y-10">
-      <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Experiência</h2>
-        <p className="text-muted-foreground">Trajetória profissional e principais atuações.</p>
-      </Reveal>
+      {!embedded ? heading : null}
 
       <div className="relative mx-auto max-w-3xl space-y-4">
         <Reveal
@@ -21,9 +39,21 @@ export const Experiences = ({ experiences }: { experiences: Experience[] }) => {
           <div aria-hidden className="h-full w-px bg-border" />
         </Reveal>
 
-        {experiences.map((experience, i) => (
+        {visibleExperiences.map((experience, i) => {
+          const title = [
+            `${experience.role} — ${experience.company}`,
+            experience.period,
+            experience.contract_type,
+          ]
+            .filter(Boolean)
+            .join(" · ")
+
+          return (
           <Reveal key={experience.id} delay={i * 120} variant="fade-left">
-            <article className="relative z-0 rounded-2xl surface p-6 transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.02] hover:border-foreground/20 hover:shadow-lg md:pl-10">
+            <article
+              className="surface surface-card-static relative z-0 rounded-2xl p-6 transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.02] hover:border-foreground/20 hover:shadow-lg md:pl-10"
+              title={title}
+            >
               <span
                 aria-hidden
                 className="absolute top-7 left-6 hidden size-2.5 rounded-full border-2 border-primary bg-background md:block"
@@ -51,8 +81,13 @@ export const Experiences = ({ experiences }: { experiences: Experience[] }) => {
               />
             </article>
           </Reveal>
-        ))}
+          )
+        })}
       </div>
+
+      {ctaHref && experiences.length > visibleExperiences.length ? (
+        <SectionCta href={ctaHref} label={ctaLabel} />
+      ) : null}
     </section>
   )
 }

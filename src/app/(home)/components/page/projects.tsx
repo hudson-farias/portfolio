@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { Reveal } from "../reveal"
 import { AppIcon } from "@/components/icons/app-icon"
 import { Button } from "@/components/ui/button"
+import { SectionCta } from "../section-cta"
 import type { Project } from "@/types"
 
 const GAP_PX = 16
@@ -13,15 +14,22 @@ const TRAILING_PX = 32
 function ProjectCard({
   project,
   cardWidth,
+  className = "",
 }: {
   project: Project
-  cardWidth: number
+  cardWidth?: number
+  className?: string
 }) {
+  const title = project.description
+    ? `${project.name} — ${project.description}`
+    : project.name
+
   return (
     <article
       data-project-card
-      style={{ width: cardWidth > 0 ? cardWidth : undefined }}
-      className="relative z-0 flex min-h-[280px] flex-none snap-start flex-col overflow-hidden rounded-2xl surface transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg sm:min-h-[320px]"
+      title={title}
+      style={cardWidth && cardWidth > 0 ? { width: cardWidth } : undefined}
+      className={`surface surface-card-static relative z-0 flex min-h-[280px] flex-col overflow-hidden rounded-2xl transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg sm:min-h-[320px] ${className}`}
     >
       {project.image_url ? (
         <div className="relative aspect-video w-full overflow-hidden border-b bg-muted/20">
@@ -48,7 +56,7 @@ function ProjectCard({
               href={project.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <AppIcon name="github" className="size-4" />
               Repositório
@@ -59,7 +67,7 @@ function ProjectCard({
               href={project.homepage}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
+              className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <ExternalLink className="size-4" />
               Demo
@@ -71,14 +79,36 @@ function ProjectCard({
   )
 }
 
-export const Projects = ({ projects }: { projects: Project[] }) => {
+export const Projects = ({
+  projects,
+  limit,
+  ctaHref,
+  ctaLabel = "Ver todos os projetos",
+  layout = "carousel",
+  embedded = false,
+}: {
+  projects: Project[]
+  limit?: number
+  ctaHref?: string
+  ctaLabel?: string
+  layout?: "carousel" | "grid"
+  embedded?: boolean
+}) => {
+  const visibleProjects = limit ? projects.slice(0, limit) : projects
+
+  const heading = (
+    <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
+      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Projetos</h2>
+      <p className="text-muted-foreground">Seleção de trabalhos recentes.</p>
+    </Reveal>
+  )
   const [activePage, setActivePage] = useState(0)
   const [pageWidth, setPageWidth] = useState(0)
   const [cardWidth, setCardWidth] = useState(0)
   const [fitsAll, setFitsAll] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
 
-  const total = projects.length
+  const total = visibleProjects.length
 
   const measure = useCallback(() => {
     const container = carouselRef.current
@@ -180,14 +210,27 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
     )
   }
 
+  if (layout === "grid") {
+    return (
+      <section id="projects" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
+        {!embedded ? heading : null}
+
+        <div className="mx-auto grid w-full max-w-4xl gap-4 md:grid-cols-2">
+          {visibleProjects.map((project, index) => (
+            <Reveal key={project.id} variant="scale" delay={80 + index * 60}>
+              <ProjectCard project={project} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   const showControls = !fitsAll && totalPages > 1
 
   return (
     <section id="projects" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
-      <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Projetos</h2>
-        <p className="text-muted-foreground">Seleção de trabalhos recentes.</p>
-      </Reveal>
+      {!embedded ? heading : null}
 
       <Reveal delay={120} className="relative isolate z-0 overflow-hidden px-10 sm:px-12">
         {showControls && (
@@ -224,8 +267,13 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
           aria-label="Carrossel de projetos"
         >
           <div className="flex w-max gap-4 pr-8 snap-x snap-mandatory">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} cardWidth={cardWidth} />
+            {visibleProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                cardWidth={cardWidth}
+                className="flex-none snap-start"
+              />
             ))}
           </div>
         </div>
@@ -247,7 +295,7 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
               key={i}
               type="button"
               onClick={() => goToPage(i)}
-              className={`h-2.5 rounded-full transition-all ${
+              className={`h-2.5 cursor-pointer rounded-full transition-all ${
                 i === activePage
                   ? "w-6 bg-primary"
                   : "w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/70"
@@ -258,6 +306,10 @@ export const Projects = ({ projects }: { projects: Project[] }) => {
           ))}
         </Reveal>
       )}
+
+      {ctaHref && projects.length > visibleProjects.length ? (
+        <SectionCta href={ctaHref} label={ctaLabel} />
+      ) : null}
     </section>
   )
 }

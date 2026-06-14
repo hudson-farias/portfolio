@@ -98,7 +98,8 @@ function ContactChannel({
       target={channel.external ? "_blank" : undefined}
       rel={channel.external ? "noopener noreferrer" : undefined}
       aria-label={formatSocialAriaLabel(channel.icon, profileName)}
-      className="surface flex items-center gap-3 rounded-xl px-4 py-3 transition-[transform,colors] hover:border-foreground/15 hover:-translate-y-0.5"
+      title={`${channel.title} — ${channel.subtitle}`}
+      className="surface flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-[transform,colors] hover:border-foreground/15 hover:-translate-y-0.5"
     >
       <span className="surface inline-flex size-10 shrink-0 items-center justify-center rounded-full">
         <AppIcon name={channel.icon} className="size-4" />
@@ -111,26 +112,34 @@ function ContactChannel({
   )
 }
 
-export const Contact = ({ contact }: { contact: ContactResponse }) => {
+export const Contact = ({
+  contact,
+  embedded = false,
+}: {
+  contact: ContactResponse
+  embedded?: boolean
+}) => {
   const channels = buildContactChannels(contact)
 
-  return (
-    <section id="contact" className="relative z-0 scroll-mt-28">
-      <Reveal variant="scale" duration={700}>
-        <div className="surface rounded-3xl px-6 py-10 transition-[transform,colors] duration-300 hover:border-foreground/15 md:px-10 md:py-12">
+  const content = (
+    <Reveal variant="scale" duration={700}>
+      <div className="surface cursor-default rounded-3xl px-6 py-10 md:px-10 md:py-12">
+        {!embedded ? (
           <Reveal variant="fade-up" className="mx-auto max-w-2xl space-y-3 text-center md:max-w-none md:text-left">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Contato</h2>
             <p className="text-muted-foreground">
               Envie uma mensagem ou escolha outro canal — respondo em até 24 horas.
             </p>
           </Reveal>
+        ) : null}
 
-          <div
-            className={cn(
-              "mt-8 gap-8 md:mt-10",
-              channels.length > 0 ? "grid md:grid-cols-2 md:items-start" : "mx-auto max-w-xl",
-            )}
-          >
+        <div
+          className={cn(
+            "gap-8",
+            !embedded && "mt-8 md:mt-10",
+            channels.length > 0 ? "grid md:grid-cols-2 md:items-start" : "mx-auto max-w-xl",
+          )}
+        >
             <Reveal variant="fade-up" delay={120}>
               <form
                 className="space-y-4"
@@ -190,9 +199,18 @@ export const Contact = ({ contact }: { contact: ContactResponse }) => {
                 </div>
               </Reveal>
             )}
-          </div>
         </div>
-      </Reveal>
+      </div>
+    </Reveal>
+  )
+
+  if (embedded) {
+    return <div className="relative z-0">{content}</div>
+  }
+
+  return (
+    <section id="contact" className="relative z-0 scroll-mt-28">
+      {content}
     </section>
   )
 }

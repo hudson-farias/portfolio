@@ -16,6 +16,14 @@ const contentSecurityPolicy = [
 ].join("; ")
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/stack", destination: "/", permanent: true },
+      { source: "/stack/skills", destination: "/skills", permanent: true },
+      { source: "/stack/soft-skills", destination: "/skills", permanent: true },
+      { source: "/stack/databases", destination: "/databases", permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

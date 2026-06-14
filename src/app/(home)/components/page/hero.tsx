@@ -1,7 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Download, MapPin } from "lucide-react"
+import { routes } from "@/lib/site-routes"
 import { Button } from "@/components/ui/button"
 import type { HeroProfile } from "../../interfaces"
 
@@ -74,7 +76,7 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
     <section id="hero" className="scroll-mt-28 space-y-10 pt-8 md:pt-14">
       <div className="mx-auto max-w-4xl space-y-8">
         {profile.available && (
-          <p className="surface land-fade-up inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
+          <p className="surface cursor-default land-fade-up inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
             <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
             Disponível para projetos
           </p>
@@ -102,16 +104,16 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
 
         <div className="land-fade-up land-delay-500 flex flex-wrap gap-3">
           <Button asChild size="lg" className="rounded-full px-6 transition-transform hover:scale-[1.02]">
-            <a href="#contact">
+            <Link href={routes.contact}>
               Vamos conversar
               <ArrowRight />
-            </a>
+            </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="rounded-full px-6 transition-transform hover:scale-[1.02]">
-            <a href={`mailto:${profile.email}?subject=Curriculum`}>
+            <Link href={routes.resume}>
               <Download />
               Baixar CV
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

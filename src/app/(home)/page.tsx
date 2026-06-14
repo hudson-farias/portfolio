@@ -1,17 +1,36 @@
 import { API } from "@/api/server"
+import { routes } from "@/lib/site-routes"
 
 import { About } from "./components/page/about"
-import { Contact } from "./components/page/contact"
 import { Experiences } from "./components/page/experiences"
 import { Hero } from "./components/page/hero"
 import { Projects } from "./components/page/projects"
-import { Skills } from "./components/page/skills"
+import { StackSkills } from "./components/page/stack-skills"
+import { StackTech } from "./components/page/stack-tech"
+import { StackDatabases } from "./components/page/stack-databases"
 import { Tools } from "./components/page/tools"
 import type { AboutStats, PageResponse } from "./interfaces"
+import type { Database, Framework } from "@/types"
 
 export default async function Home() {
-  const response = await API.get("/landpage/page")
-  const { hero, about, skills, tools, experiences, projects, contact }: PageResponse = await response.json()
+  const [homeRes, frameworksRes, databasesRes] = await Promise.all([
+    API.get("/landpage/home"),
+    API.get("/landpage/frameworks"),
+    API.get("/landpage/databases"),
+  ])
+
+  if (!homeRes.ok) throw new Error("Não foi possível carregar a página inicial.")
+
+  const { hero, about, skills, tools, experiences, projects }: PageResponse =
+    await homeRes.json()
+
+  const frameworks: Framework[] = frameworksRes.ok
+    ? ((await frameworksRes.json()) as { frameworks: Framework[] }).frameworks
+    : []
+
+  const databases: Database[] = databasesRes.ok
+    ? ((await databasesRes.json()) as { databases: Database[] }).databases
+    : []
 
   const aboutStats: AboutStats = {
     yearsExperience: about.stats.years_experience,
@@ -28,11 +47,12 @@ export default async function Home() {
         socialNetworks={about.social_networks}
         profileName={about.profile_name}
       />
-      <Skills categories={skills.skills} />
-      <Tools tools={tools.tools} />
-      <Experiences experiences={experiences.experiences} />
-      <Projects projects={projects.projects} />
-      <Contact contact={contact} />
+      <StackTech frameworks={frameworks} />
+      <StackDatabases databases={databases} />
+      <StackSkills skills={skills.skills} />
+      <Tools tools={tools.tools} limit={6} ctaHref={routes.tools} />
+      <Experiences experiences={experiences.experiences} limit={1} ctaHref={routes.experience} />
+      <Projects projects={projects.projects} limit={2} ctaHref={routes.projects} />
     </>
   )
 }

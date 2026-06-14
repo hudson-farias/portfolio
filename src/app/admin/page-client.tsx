@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 
-import { Briefcase, FolderGit2, Layers, Share2, Wrench } from "lucide-react"
+import { Briefcase, Boxes, Database, FolderGit2, Languages, Layers, Share2, Wrench } from "lucide-react"
 
 import type { AdminPageClientProps } from "./interfaces"
 
@@ -14,6 +14,9 @@ import { SkillsGrid } from "./components/skills-grid"
 import { ProjectsList } from "./components/projects-list"
 import { SocialNetworksTable } from "./components/social-networks-table"
 import { ToolsTable } from "./components/tools-table"
+import { LanguagesTable } from "./components/languages-table"
+import { FrameworksTable } from "./components/frameworks-table"
+import { DatabasesTable } from "./components/databases-table"
 
 export function AdminPageClient({ data }: AdminPageClientProps) {
     const { canMutate } = useAdminAuth()
@@ -39,9 +42,12 @@ export function AdminPageClient({ data }: AdminPageClientProps) {
                 </span>
             </header>
 
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-8">
                 <StatCard label="Experiências" value={data.counts.experiences} />
                 <StatCard label="Skills" value={data.counts.skills} />
+                <StatCard label="Linguagens" value={data.counts.languages} />
+                <StatCard label="Frameworks" value={data.counts.frameworks} />
+                <StatCard label="Bancos de dados" value={data.counts.databases} />
                 <StatCard label="Projetos" value={data.counts.projects} />
                 <StatCard label="Ferramentas" value={data.counts.tools} />
                 <StatCard label="Redes sociais" value={data.counts.social_networks} />
@@ -73,14 +79,46 @@ export function AdminPageClient({ data }: AdminPageClientProps) {
                 </Section>
             </div>
 
+            <div className="grid gap-6 xl:grid-cols-2">
+                <Section
+                    title="Linguagens"
+                    description="Linguagens vinculadas aos frameworks"
+                    icon={Languages}
+                    canMutate={canMutate}
+                    href="/admin/languages"
+                >
+                    <LanguagesTable items={data.languages} />
+                </Section>
+
+                <Section
+                    title="Frameworks"
+                    description="Frameworks exibidos em /frameworks"
+                    icon={Boxes}
+                    canMutate={canMutate}
+                    href="/admin/frameworks"
+                >
+                    <FrameworksTable items={data.frameworks} />
+                </Section>
+            </div>
+
+            <Section
+                title="Bancos de dados"
+                description="Bancos exibidos em /databases"
+                icon={Database}
+                canMutate={canMutate}
+                href="/admin/databases"
+            >
+                <DatabasesTable items={data.databases} />
+            </Section>
+
             <Section
                 title="Skills"
-                description="Categorias e habilidades cadastradas"
+                description="Skills exibidas no stack e no currículo"
                 icon={Layers}
                 canMutate={canMutate}
                 href="/admin/skills"
             >
-                <SkillsGrid categories={data.skills} canMutate={false} />
+                <SkillsGrid skills={data.skills} canMutate={false} />
             </Section>
 
             <Section

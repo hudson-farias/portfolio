@@ -4,11 +4,6 @@ export interface Skill {
   icon: string
 }
 
-export interface SkillCategory {
-  title: string
-  skills: Skill[]
-}
-
 export type ContractType = "CLT" | "PJ" | "FREELANCER"
 
 export interface Experience {
@@ -42,4 +37,25 @@ export interface Tool {
   name: string
   icon: string
   url?: string | null
+}
+
+export interface LanguageRef {
+  id: number
+  name: string
+  icon: string
+}
+
+export interface Framework {
+  id: number
+  name: string
+  icon: string
+  scope?: "backend" | "frontend" | null
+  languages: LanguageRef[]
+}
+
+export interface Database {
+  id: number
+  name: string
+  icon: string
+  scope?: "sql" | "nosql" | null
 }

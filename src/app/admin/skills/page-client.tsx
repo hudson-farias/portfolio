@@ -10,8 +10,8 @@ import type { AdminSkill, SkillForm, SkillsPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
-import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
-import { Field, SelectInput, TextInput } from "../components/form-fields"
+import { AdminListFilters } from "../components/admin-list-filters"
+import { Field } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
@@ -21,11 +21,11 @@ import { RowActions } from "../components/row-actions"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
+import { TextInput } from "../components/form-fields"
 
 const emptyForm: SkillForm = {
   name: "",
   icon: "",
-  skill_category_id: 0,
 }
 
 export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
@@ -40,10 +40,7 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
 
   function openCreate() {
     setEditingId(null)
-    setForm({
-      ...emptyForm,
-      skill_category_id: initialData.categories[0]?.id ?? 0,
-    })
+    setForm(emptyForm)
     setModalOpen(true)
   }
 
@@ -52,7 +49,6 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
     setForm({
       name: item.name,
       icon: item.icon,
-      skill_category_id: item.skill_category_id,
     })
     setModalOpen(true)
   }
@@ -89,18 +85,18 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
     await refreshAuth()
   }
 
-  const skillsByCategory = initialData.categories.map((category) => ({
-    category,
-    skills: initialData.skills.filter((skill) => skill.skill_category_id === category.id),
-  }))
-
-  const visibleSkills = queryString ? initialData.skills : skillsByCategory.flatMap(({ skills }) => skills)
+  const visibleSkills = queryString
+    ? initialData.skills.filter((skill) => {
+        const query = filters.q.trim().toLowerCase()
+        return skill.name.toLowerCase().includes(query) || skill.icon.toLowerCase().includes(query)
+      })
+    : initialData.skills
 
   return (
     <div>
       <PageHeader
         title="Skills"
-        description="Gerencie habilidades e categorias"
+        description="Gerencie skills exibidas no stack e no currículo"
         icon={Layers}
         canMutate={canMutate}
         onAdd={openCreate}
@@ -115,21 +111,7 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
           search={filters.q}
           onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
           onClear={clearFilters}
-        >
-          <AdminFilterField label="Categoria">
-            <AdminFilterSelect
-              value={filters.skill_category_id}
-              onValueChange={(skill_category_id) => setFilters((current) => ({ ...current, skill_category_id }))}
-              options={[
-                { value: "", label: "Todas" },
-                ...initialData.categories.map((category) => ({
-                  value: String(category.id),
-                  label: category.title,
-                })),
-              ]}
-            />
-          </AdminFilterField>
-        </AdminListFilters>
+        />
 
         {visibleSkills.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhuma skill encontrada.</p>
@@ -138,7 +120,6 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
             <thead>
               <tr className={adminHeadRow}>
                 <th className={adminTh()}>Skill</th>
-                <th className={adminTh("w-48")}>Categoria</th>
                 {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
               </tr>
             </thead>
@@ -151,7 +132,6 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
                       {skill.name}
                     </span>
                   </td>
-                  <td className={adminTd("text-zinc-500")}>{skill.skill_category_name}</td>
                   {canMutate && (
                     <td className={adminTd()}>
                       <RowActions
@@ -189,21 +169,6 @@ export function SkillsPageClient({ initialData }: SkillsPageClientProps) {
             value={form.icon}
             onChange={(icon) => setForm((f) => ({ ...f, icon }))}
           />
-        </Field>
-        <Field label="Categoria">
-          <SelectInput
-            required
-            value={form.skill_category_id}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, skill_category_id: Number(e.target.value) }))
-            }
-          >
-            {initialData.categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.title}
-              </option>
-            ))}
-          </SelectInput>
         </Field>
       </FormModal>
     </div>
