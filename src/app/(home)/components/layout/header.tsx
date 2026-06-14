@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const navItems = [
-  { label: "Home", href: "#hero" },
   { label: "Sobre", href: "#about" },
   { label: "Skills", href: "#skills" },
   { label: "Ferramentas", href: "#tools" },
