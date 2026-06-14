@@ -15,7 +15,6 @@ export default async function Home() {
   const aboutStats: AboutStats = {
     yearsExperience: about.stats.years_experience,
     projectsCount: about.stats.projects_count,
-    clientsCount: about.stats.clients_count,
   }
 
   return (

@@ -72,11 +72,10 @@ export const About = ({
         </div>
       )}
 
-      <div className="grid gap-6 pt-10 sm:grid-cols-3">
+      <div className="grid gap-6 pt-10 sm:grid-cols-2">
         {[
           { value: `${String(stats.yearsExperience).padStart(2, "0")}+`, label: "Anos de experiência" },
           { value: String(stats.projectsCount).padStart(2, "0"), label: "Repos na vitrine" },
-          { value: `${String(stats.clientsCount).padStart(2, "0")}+`, label: "Empresas" },
         ].map((stat, i) => (
           <Reveal key={stat.label} variant="scale" delay={i * 100} className="text-center">
             <p className="text-4xl font-bold tracking-tight">{stat.value}</p>

@@ -56,7 +56,7 @@ export const Footer = ({
             <p className="text-lg font-semibold">{profileName}</p>
             <p className="text-sm text-muted-foreground">{profileTagline}</p>
             <p className="text-sm text-muted-foreground">
-              © 2021 — {new Date().getFullYear()} {profileName}. Todos os direitos reservados.
+              © {footer.career_start} — {new Date().getFullYear()} {profileName}. Todos os direitos reservados.
             </p>
           </div>
         </Reveal>

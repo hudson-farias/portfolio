@@ -1,35 +1,12 @@
 import type { Experience, Project, SkillCategory, SocialNetwork } from "@/types"
 export type { SocialNetwork } from "@/types"
 
-
-export interface Profile {
-  name: string
-  roles: string[]
-  location: string
-  email: string
-  phone: string
-  about: string
-  about_extended: string
-  available: boolean
-}
-
 export interface Stats {
   yearsExperience: number
   projectsCount: number
-  clientsCount: number
 }
 
 export type AboutStats = Stats
-
-export interface PortfolioData {
-  profile: Profile
-  stats: Stats
-  skills: SkillCategory[]
-  experiences: Experience[]
-  projects: Project[]
-  socialNetworksHeader: SocialNetwork[]
-  socialNetworksFooter: SocialNetwork[]
-}
 
 export interface ContactResponse {
   email: string
@@ -72,7 +49,6 @@ export interface AboutResponse {
   stats: {
     years_experience: number
     projects_count: number
-    clients_count: number
   }
   linkedin: string
   social_networks: SocialNetwork[]
@@ -88,6 +64,7 @@ export interface FooterResponse {
   github: string
   gitlab: string
   linkedin: string
+  career_start: number
   social_networks: SocialNetwork[]
 }
 
