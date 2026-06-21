@@ -16,12 +16,12 @@ export const Header = () => {
 
   const navItems = [
     { label: t.nav.about, href: routes.home },
-    { label: t.nav.frameworks, href: routes.frameworks },
-    { label: t.nav.databases, href: routes.databases },
-    { label: t.nav.skills, href: routes.skills },
-    { label: t.nav.tools, href: routes.tools },
     { label: t.nav.experience, href: routes.experience },
     { label: t.nav.projects, href: routes.projects },
+    { label: t.nav.frameworks, href: routes.frameworks },
+    { label: t.nav.databases, href: routes.databases },
+    { label: t.nav.tools, href: routes.tools },
+    { label: t.nav.skills, href: routes.skills },
     { label: t.nav.contact, href: routes.contact },
   ]
 

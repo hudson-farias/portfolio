@@ -54,12 +54,12 @@ export default async function HomeRoutePage({ params }: { params: Promise<{ segm
         socialNetworks={about.social_networks}
         profileName={about.profile_name}
       />
-      <StackTech frameworks={frameworks} />
-      <StackDatabases databases={databases} />
-      <StackSkills skills={skills.skills} />
-      <Tools tools={tools.tools} limit={6} ctaHref={routes.tools} />
       <Experiences experiences={experiences.experiences} limit={1} ctaHref={routes.experience} />
       <Projects projects={projects.projects} limit={2} ctaHref={routes.projects} />
+      <StackTech frameworks={frameworks} />
+      <StackDatabases databases={databases} />
+      <Tools tools={tools.tools} limit={6} ctaHref={routes.tools} />
+      <StackSkills skills={skills.skills} />
     </>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react"
+import { useLayoutEffect, useRef, useState, type ElementType, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 type RevealVariant = "fade-up" | "fade" | "fade-left" | "fade-right" | "scale"
@@ -48,24 +48,32 @@ export function Reveal({
   immediate = false,
 }: RevealProps) {
   const ref = useRef<HTMLElement>(null)
-  const [visible, setVisible] = useState(immediate)
+  const [visible, setVisible] = useState(true)
   const [done, setDone] = useState(immediate)
   const [reduceMotion, setReduceMotion] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     setReduceMotion(prefersReduced)
-    if (prefersReduced) {
+
+    if (immediate || prefersReduced) {
       setVisible(true)
       setDone(true)
+      return
     }
-  }, [])
-
-  useEffect(() => {
-    if (immediate || reduceMotion) return
 
     const el = ref.current
     if (!el) return
+
+    const inView = el.getBoundingClientRect().top < window.innerHeight
+
+    if (inView) {
+      setVisible(true)
+      setDone(true)
+      return
+    }
+
+    setVisible(false)
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -79,7 +87,7 @@ export function Reveal({
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [immediate, reduceMotion])
+  }, [immediate])
 
   const styles = variantStyles[variant]
   const animating = visible && !done && !reduceMotion

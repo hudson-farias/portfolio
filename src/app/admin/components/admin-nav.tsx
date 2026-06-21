@@ -10,14 +10,14 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/profile", label: "Perfil", icon: User },
-  { href: "/admin/languages", label: "Linguagens", icon: Languages },
-  { href: "/admin/frameworks", label: "Frameworks", icon: Boxes },
-  { href: "/admin/databases", label: "Bancos de dados", icon: Database },
-  { href: "/admin/skills", label: "Skills", icon: Layers },
-  { href: "/admin/tools", label: "Ferramentas", icon: Wrench },
-  { href: "/admin/roles", label: "Cargos", icon: BadgeCheck },
   { href: "/admin/experiences", label: "Experiências", icon: Briefcase },
   { href: "/admin/projects", label: "Projetos", icon: FolderGit2 },
+  { href: "/admin/frameworks", label: "Frameworks", icon: Boxes },
+  { href: "/admin/databases", label: "Bancos de dados", icon: Database },
+  { href: "/admin/tools", label: "Ferramentas", icon: Wrench },
+  { href: "/admin/skills", label: "Skills", icon: Layers },
+  { href: "/admin/languages", label: "Linguagens", icon: Languages },
+  { href: "/admin/roles", label: "Cargos", icon: BadgeCheck },
   { href: "/admin/social-networks", label: "Redes sociais", icon: Share2 },
 ]
 
