@@ -61,6 +61,33 @@ Prefira arquivos colados à rota para o resto:
 
 Reservado a UI **global** do projeto (`ui/button`, etc.), não a telas de uma rota específica.
 
+### Landpage — `app/(home)/`
+
+Estrutura i18n com rotas finas + server components compartilhados:
+
+```
+app/(home)/
+  page.tsx             → redirect / → /pt
+  layout.tsx           → pass-through ({children})
+  [segment]/
+    layout.tsx           → SiteLayout + JsonLd + metadata
+    layout.interfaces.ts → tipos do layout/metadata API
+    metadata.ts          → generateLandpageMetadata
+    interfaces.ts        → tipos da home (`page.tsx`)
+    page.tsx
+    contact/page.tsx + contact/interfaces.ts
+    …
+  _ui/                   → blocos visuais reutilizáveis
+```
+
+| Arquivo | Tipos |
+|---------|-------|
+| `[segment]/interfaces.ts` | home (`PageResponse`, `HeroProfile`, …) |
+| `[segment]/layout.interfaces.ts` | layout global (`LayoutResponse`, `FooterResponse`, …) |
+| `[segment]/*/interfaces.ts` | resposta da API daquela página |
+
+Pastas com prefixo `_` são [private folders](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders) — não geram segmento de URL.
+
 ### Evitar (estrutura)
 
 - `components/foo-client.tsx` como substituto de `page-client.tsx`

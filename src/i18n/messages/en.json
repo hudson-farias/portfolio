@@ -1,0 +1,193 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "frameworks": "Frameworks",
+    "databases": "Databases",
+    "skills": "Skills",
+    "tools": "Tools",
+    "experience": "Experience",
+    "projects": "Projects",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "footer": {
+    "pages": "Pages",
+    "stack": "Stack",
+    "networks": "Social",
+    "rights": "All rights reserved."
+  },
+  "footerLinks": {
+    "about": "About",
+    "tools": "Tools",
+    "experience": "Experience",
+    "projects": "Projects",
+    "resume": "Resume",
+    "contact": "Contact",
+    "frameworks": "Frameworks",
+    "databases": "Databases",
+    "skills": "Skills"
+  },
+  "common": {
+    "backend": "Backend",
+    "frontend": "Frontend",
+    "sql": "SQL",
+    "nosql": "NoSQL",
+    "repository": "Repository",
+    "demo": "Demo",
+    "noDescription": "No description.",
+    "opensInNewTab": "(opens in new tab)"
+  },
+  "hero": {
+    "greeting": "Hi, I'm {name}.",
+    "available": "Available for projects",
+    "ctaContact": "Let's talk",
+    "ctaResume": "Download CV"
+  },
+  "about": {
+    "title": "About me",
+    "follow": "Follow me:",
+    "yearsExperience": "Years of experience",
+    "projectsInShowcase": "Repos in showcase"
+  },
+  "stackTech": {
+    "title": "Languages and frameworks",
+    "description": "What I use to build backend, frontend, and automations.",
+    "emptyBackend": "No backend frameworks.",
+    "emptyFrontend": "No frontend frameworks.",
+    "ctaAll": "View all frameworks",
+    "cta": "View frameworks"
+  },
+  "stackDatabases": {
+    "title": "Databases",
+    "description": "Persistence technologies I use in backend and full stack projects.",
+    "emptySql": "No SQL databases.",
+    "emptyNosql": "No NoSQL databases.",
+    "ctaAll": "View all databases",
+    "cta": "View databases"
+  },
+  "stackSkills": {
+    "title": "Skills",
+    "description": "Concepts, practices, and competencies that complement the technical stack.",
+    "ctaAll": "View all skills",
+    "cta": "View skills"
+  },
+  "tools": {
+    "title": "Tools I use",
+    "description": "The tool stack I use day to day for development.",
+    "empty": "New tools coming soon.",
+    "ctaAll": "View all tools"
+  },
+  "experience": {
+    "title": "Experience",
+    "description": "Professional journey and key roles.",
+    "ctaFull": "View full experience",
+    "liveUrlLabel": "Company website",
+    "meta": {
+      "title": "Experience",
+      "description": "Professional journey and key roles."
+    }
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "A selection of recent work.",
+    "empty": "New projects coming soon.",
+    "ctaAll": "View all projects",
+    "meta": {
+      "title": "Projects",
+      "description": "A selection of projects and recent work."
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Send a message or choose another channel — I reply within 24 hours.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "you@email.com",
+    "messagePlaceholder": "Tell me about the project, timeline, and goals...",
+    "submit": "Send message",
+    "formDisabled": "The form will be enabled soon.",
+    "otherChannels": "Other channels",
+    "emailTitle": "Email",
+    "whatsappTitle": "WhatsApp",
+    "whatsappSubtitle": "Direct chat",
+    "linkedinTitle": "LinkedIn",
+    "linkedinSubtitle": "Professional profile",
+    "meta": {
+      "title": "Contact",
+      "description": "Send a message or choose a channel to discuss projects and opportunities."
+    }
+  },
+  "frameworks": {
+    "title": "Frameworks",
+    "description": "Frameworks and libraries I use daily for backend and frontend.",
+    "empty": "No frameworks registered.",
+    "meta": {
+      "title": "Frameworks",
+      "description": "Frameworks and libraries I use daily for backend and frontend."
+    }
+  },
+  "databases": {
+    "title": "Databases",
+    "description": "Databases and persistence technologies I work with.",
+    "empty": "No databases registered.",
+    "emptySql": "No SQL databases.",
+    "emptyNosql": "No NoSQL databases.",
+    "meta": {
+      "title": "Databases",
+      "description": "Databases and persistence technologies I work with."
+    }
+  },
+  "skillsPage": {
+    "title": "Skills",
+    "description": "Concepts, practices, and competencies that complement the technical stack.",
+    "empty": "No skills registered.",
+    "meta": {
+      "title": "Skills",
+      "description": "Concepts, practices, and competencies that complement the technical stack."
+    }
+  },
+  "toolsPage": {
+    "title": "Tools I use",
+    "description": "The tool stack I use day to day for development.",
+    "meta": {
+      "title": "Tools",
+      "description": "The tool stack I use day to day for development."
+    }
+  },
+  "resume": {
+    "title": "Generate resume",
+    "description": "Build a CV version by filtering languages, frameworks, databases, tools, and experiences.",
+    "languages": "Languages",
+    "frameworks": "Frameworks",
+    "databases": "Databases",
+    "skills": "Skills",
+    "experiences": "Experiences",
+    "toolsSection": "Tools",
+    "includeAllTools": "Include all tools",
+    "previewTitle": "Filter preview",
+    "previewDescription": "With no selection, the PDF uses the full resume. Filter by area, language, framework, database, skill, tool, or experience before generating.",
+    "all": "All",
+    "allTools": "All",
+    "none": "None",
+    "noneMasc": "None",
+    "generatePdf": "Generate PDF",
+    "meta": {
+      "title": "Resume",
+      "description": "Generate a PDF resume with stack, tools, and experience filters."
+    }
+  },
+  "errors": {
+    "homeLoad": "Could not load the home page.",
+    "experienceLoad": "Could not load experiences.",
+    "projectsLoad": "Could not load projects.",
+    "contactLoad": "Could not load contact data.",
+    "frameworksLoad": "Could not load frameworks.",
+    "databasesLoad": "Could not load databases.",
+    "skillsLoad": "Could not load skills.",
+    "toolsLoad": "Could not load tools.",
+    "resumeLoad": "Could not load resume data."
+  }
+}

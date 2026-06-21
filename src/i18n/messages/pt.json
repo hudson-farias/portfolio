@@ -1,0 +1,193 @@
+{
+  "nav": {
+    "home": "Início",
+    "about": "Sobre",
+    "frameworks": "Frameworks",
+    "databases": "Bancos",
+    "skills": "Skills",
+    "tools": "Ferramentas",
+    "experience": "Experiência",
+    "projects": "Projetos",
+    "contact": "Contato",
+    "admin": "Admin"
+  },
+  "footer": {
+    "pages": "Páginas",
+    "stack": "Stack",
+    "networks": "Redes",
+    "rights": "Todos os direitos reservados."
+  },
+  "footerLinks": {
+    "about": "Sobre",
+    "tools": "Ferramentas",
+    "experience": "Experiência",
+    "projects": "Projetos",
+    "resume": "Currículo",
+    "contact": "Contato",
+    "frameworks": "Frameworks",
+    "databases": "Banco de dados",
+    "skills": "Skills"
+  },
+  "common": {
+    "backend": "Backend",
+    "frontend": "Frontend",
+    "sql": "SQL",
+    "nosql": "NoSQL",
+    "repository": "Repositório",
+    "demo": "Demo",
+    "noDescription": "Sem descrição.",
+    "opensInNewTab": "(abre em nova aba)"
+  },
+  "hero": {
+    "greeting": "Oi, eu sou {name}.",
+    "available": "Disponível para projetos",
+    "ctaContact": "Vamos conversar",
+    "ctaResume": "Baixar CV"
+  },
+  "about": {
+    "title": "Sobre mim",
+    "follow": "Me siga:",
+    "yearsExperience": "Anos de experiência",
+    "projectsInShowcase": "Repos na vitrine"
+  },
+  "stackTech": {
+    "title": "Linguagens e frameworks",
+    "description": "O que uso para construir backend, frontend e automações.",
+    "emptyBackend": "Nenhum framework em backend.",
+    "emptyFrontend": "Nenhum framework em frontend.",
+    "ctaAll": "Ver todos os frameworks",
+    "cta": "Ver frameworks"
+  },
+  "stackDatabases": {
+    "title": "Banco de dados",
+    "description": "Tecnologias de persistência que uso em projetos backend e full stack.",
+    "emptySql": "Nenhum banco em SQL.",
+    "emptyNosql": "Nenhum banco em NoSQL.",
+    "ctaAll": "Ver todos os bancos",
+    "cta": "Ver bancos de dados"
+  },
+  "stackSkills": {
+    "title": "Skills",
+    "description": "Conceitos, práticas e competências que complementam o stack técnico.",
+    "ctaAll": "Ver todas as skills",
+    "cta": "Ver skills"
+  },
+  "tools": {
+    "title": "Ferramentas que uso",
+    "description": "O stack de ferramentas que uso no dia a dia para desenvolver.",
+    "empty": "Em breve novas ferramentas por aqui.",
+    "ctaAll": "Ver todas as ferramentas"
+  },
+  "experience": {
+    "title": "Experiência",
+    "description": "Trajetória profissional e principais atuações.",
+    "ctaFull": "Ver experiência completa",
+    "liveUrlLabel": "Site da empresa",
+    "meta": {
+      "title": "Experiência",
+      "description": "Trajetória profissional e principais atuações."
+    }
+  },
+  "projects": {
+    "title": "Projetos",
+    "description": "Seleção de trabalhos recentes.",
+    "empty": "Em breve novos projetos por aqui.",
+    "ctaAll": "Ver todos os projetos",
+    "meta": {
+      "title": "Projetos",
+      "description": "Seleção de projetos e trabalhos recentes."
+    }
+  },
+  "contact": {
+    "title": "Contato",
+    "description": "Envie uma mensagem ou escolha outro canal — respondo em até 24 horas.",
+    "name": "Nome",
+    "email": "E-mail",
+    "message": "Mensagem",
+    "namePlaceholder": "Seu nome",
+    "emailPlaceholder": "seu@email.com",
+    "messagePlaceholder": "Conte sobre o projeto, prazo e objetivo...",
+    "submit": "Enviar mensagem",
+    "formDisabled": "O formulário será habilitado em breve.",
+    "otherChannels": "Outros canais",
+    "emailTitle": "E-mail",
+    "whatsappTitle": "WhatsApp",
+    "whatsappSubtitle": "Conversa direta",
+    "linkedinTitle": "LinkedIn",
+    "linkedinSubtitle": "Perfil profissional",
+    "meta": {
+      "title": "Contato",
+      "description": "Envie uma mensagem ou escolha um canal para falar sobre projetos e oportunidades."
+    }
+  },
+  "frameworks": {
+    "title": "Frameworks",
+    "description": "Frameworks e bibliotecas do meu dia a dia em backend e frontend.",
+    "empty": "Nenhum framework cadastrado.",
+    "meta": {
+      "title": "Frameworks",
+      "description": "Frameworks e bibliotecas do meu dia a dia em backend e frontend."
+    }
+  },
+  "databases": {
+    "title": "Banco de dados",
+    "description": "Bancos e tecnologias de persistência com que trabalho.",
+    "empty": "Nenhum banco de dados cadastrado.",
+    "emptySql": "Nenhum banco em SQL.",
+    "emptyNosql": "Nenhum banco em NoSQL.",
+    "meta": {
+      "title": "Banco de dados",
+      "description": "Bancos e tecnologias de persistência com que trabalho."
+    }
+  },
+  "skillsPage": {
+    "title": "Skills",
+    "description": "Conceitos, práticas e competências que complementam o stack técnico.",
+    "empty": "Nenhuma skill cadastrada.",
+    "meta": {
+      "title": "Skills",
+      "description": "Conceitos, práticas e competências que complementam o stack técnico."
+    }
+  },
+  "toolsPage": {
+    "title": "Ferramentas que uso",
+    "description": "O stack de ferramentas que uso no dia a dia para desenvolver.",
+    "meta": {
+      "title": "Ferramentas",
+      "description": "O stack de ferramentas que uso no dia a dia para desenvolver."
+    }
+  },
+  "resume": {
+    "title": "Gerar currículo",
+    "description": "Monte uma versão do CV filtrando linguagens, frameworks, bancos de dados, ferramentas e experiências.",
+    "languages": "Linguagens",
+    "frameworks": "Frameworks",
+    "databases": "Bancos de dados",
+    "skills": "Skills",
+    "experiences": "Experiências",
+    "toolsSection": "Ferramentas",
+    "includeAllTools": "Incluir todas as ferramentas",
+    "previewTitle": "Prévia do filtro",
+    "previewDescription": "Sem seleção, o PDF usa o currículo completo. Filtre por área, linguagem, framework, banco de dados, skill, ferramenta ou experiência antes de gerar.",
+    "all": "Todas",
+    "allTools": "Todas",
+    "none": "Nenhuma",
+    "noneMasc": "Nenhum",
+    "generatePdf": "Gerar PDF",
+    "meta": {
+      "title": "Currículo",
+      "description": "Gere um currículo em PDF com filtros de stack, ferramentas e experiências."
+    }
+  },
+  "errors": {
+    "homeLoad": "Não foi possível carregar a página inicial.",
+    "experienceLoad": "Não foi possível carregar as experiências.",
+    "projectsLoad": "Não foi possível carregar os projetos.",
+    "contactLoad": "Não foi possível carregar os dados de contato.",
+    "frameworksLoad": "Não foi possível carregar os frameworks.",
+    "databasesLoad": "Não foi possível carregar os bancos de dados.",
+    "skillsLoad": "Não foi possível carregar as skills.",
+    "toolsLoad": "Não foi possível carregar as ferramentas.",
+    "resumeLoad": "Não foi possível carregar os dados do currículo."
+  }
+}
