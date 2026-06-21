@@ -1,5 +1,7 @@
 "use client"
 
+import { ExternalLink } from "lucide-react"
+
 import { Reveal } from "../reveal"
 import { SanitizedHtml } from "@/components/sanitized-html"
 import { SectionCta } from "../section-cta"
@@ -62,7 +64,20 @@ export const Experiences = ({
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-lg font-semibold">{experience.role}</h3>
-                  <p className="text-sm text-muted-foreground">{experience.company}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{experience.company}</p>
+                    {experience.live_url && (
+                      <a
+                        href={experience.live_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                      >
+                        <ExternalLink className="size-3" />
+                        Site da empresa
+                      </a>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {experience.contract_type && (

@@ -32,6 +32,7 @@ export function ExperiencesTable({
           <th className={adminTh("w-24")}>Contrato</th>
           <th className={adminTh("w-36")}>Período</th>
           <th className={adminTh("min-w-64")}>Descrição</th>
+          <th className={adminTh("min-w-36")}>Site da empresa</th>
           {canMutate && <th className={adminTh("w-24")}>Status</th>}
           {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
         </tr>
@@ -50,6 +51,20 @@ export function ExperiencesTable({
                 html={item.description}
                 className="line-clamp-4 space-y-0 text-sm leading-relaxed [&_p+p]:mt-1"
               />
+            </td>
+            <td className={adminTd("text-zinc-500")}>
+              {"live_url" in item && item.live_url ? (
+                <a
+                  href={item.live_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline-offset-4 hover:underline"
+                >
+                  Site da empresa
+                </a>
+              ) : (
+                "—"
+              )}
             </td>
             {canMutate && (
               <td className={adminTd()}>

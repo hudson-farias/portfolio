@@ -36,6 +36,7 @@ const emptyForm: ExperienceForm = {
   role_id: "",
   contract_type: "",
   description: "",
+  live_url: "",
   hidden: false,
 }
 
@@ -75,6 +76,7 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
       role_id: item.role_id !== null ? String(item.role_id) : "",
       contract_type: item.contract_type ?? "",
       description: item.description,
+      live_url: item.live_url ?? "",
       hidden: item.hidden ?? false,
     })
     setModalOpen(true)
@@ -87,6 +89,7 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
       role_id: form.role_id ? Number(form.role_id) : null,
       contract_type: form.contract_type ? (form.contract_type as ContractType) : null,
       description: form.description,
+      live_url: form.live_url.trim() || null,
       hidden: form.hidden,
     }
   }
@@ -250,6 +253,14 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
             required
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          />
+        </Field>
+        <Field label="URL da empresa (opcional)">
+          <TextInput
+            type="url"
+            placeholder="https://..."
+            value={form.live_url}
+            onChange={(e) => setForm((f) => ({ ...f, live_url: e.target.value }))}
           />
         </Field>
         <CheckboxField

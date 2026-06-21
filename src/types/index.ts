@@ -13,6 +13,7 @@ export interface Experience {
   role: string
   contract_type?: ContractType | null
   description: string
+  live_url?: string | null
   hidden?: boolean
 }
 

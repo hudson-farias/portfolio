@@ -8,6 +8,7 @@ export interface AdminExperience {
   role_title: string | null
   contract_type: ContractType | null
   description: string
+  live_url?: string | null
   hidden?: boolean
 }
 
@@ -31,6 +32,7 @@ export interface ExperienceForm {
   role_id: string
   contract_type: string
   description: string
+  live_url: string
   hidden: boolean
 }
 

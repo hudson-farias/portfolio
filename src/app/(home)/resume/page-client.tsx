@@ -13,7 +13,6 @@ import {
   uniqueLanguagesFromFrameworks,
   type ResumeFilterState,
 } from "@/lib/resume-filters"
-import { RESUME_AREA_SECTIONS } from "@/lib/stack-config"
 import type { Database, Experience, Framework, LanguageRef, Skill, Tool } from "@/types"
 
 function toggleValue<T>(values: T[], value: T) {
@@ -195,49 +194,25 @@ export function ResumeBuilder({
           </FilterGroup>
         ) : null}
 
-        <FilterGroup title="Skills">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Áreas</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {RESUME_AREA_SECTIONS.map((section) => (
-                  <CheckboxRow
-                    key={section.slug}
-                    label={section.title}
-                    checked={filters.sections.includes(section.slug)}
-                    onChange={() =>
-                      setFilters((current) => ({
-                        ...current,
-                        sections: toggleValue(current.sections, section.slug),
-                      }))
-                    }
-                  />
-                ))}
-              </div>
+        {skills.length > 0 ? (
+          <FilterGroup title="Skills">
+            <div className="grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2">
+              {skills.map((skill) => (
+                <CheckboxRow
+                  key={skill.id}
+                  label={skill.name}
+                  checked={filters.skillIds.includes(skill.id)}
+                  onChange={() =>
+                    setFilters((current) => ({
+                      ...current,
+                      skillIds: toggleValue(current.skillIds, skill.id),
+                    }))
+                  }
+                />
+              ))}
             </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Específicas
-              </p>
-              <div className="grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2">
-                {skills.map((skill) => (
-                  <CheckboxRow
-                    key={skill.id}
-                    label={skill.name}
-                    checked={filters.skillIds.includes(skill.id)}
-                    onChange={() =>
-                      setFilters((current) => ({
-                        ...current,
-                        skillIds: toggleValue(current.skillIds, skill.id),
-                      }))
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </FilterGroup>
+          </FilterGroup>
+        ) : null}
 
         <FilterGroup title="Experiências">
           <div className="space-y-2">

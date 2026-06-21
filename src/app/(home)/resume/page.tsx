@@ -7,7 +7,7 @@ import type { ExperiencesResponse, SkillsResponse, ToolsResponse } from "../inte
 import type { Framework, Database } from "@/types"
 
 export const metadata: Metadata = {
-  title: "Resume",
+  title: "Currículo",
   description: "Gere um currículo em PDF com filtros de stack, ferramentas e experiências.",
 }
 
