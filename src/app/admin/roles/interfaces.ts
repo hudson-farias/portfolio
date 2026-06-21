@@ -1,42 +1,41 @@
+import type { LocaleCode, Translations } from "@/lib/admin/locale"
+
 export type RoleSeniority = "Junior" | "Pleno" | "Senior" | "Lead"
+
+export interface RoleTranslationFields {
+  title: string
+  summary: string
+}
 
 export interface AdminRole {
   id: number
   title: string
-  summary: string | null
   category: string | null
   seniority: RoleSeniority | null
   show: boolean
   featured: boolean
-  locale: string | null
   active: boolean
   sort_order: number
   color: string | null
   icon: string | null
   experience_count: number
+  translations?: Translations<RoleTranslationFields>
 }
 
 export interface RoleForm {
-  title: string
-  summary: string
   category: string
   seniority: string
   show: boolean
   featured: boolean
-  locale: string | null
   active: boolean
   sort_order: number
   color: string
   icon: string
+  translations: Record<LocaleCode, RoleTranslationFields>
 }
 
 export interface RolesPageClientProps {
   initialItems: AdminRole[]
-}
-
-export interface LocaleOption {
-  value: string | null
-  label: string
 }
 
 export interface SeniorityOption {

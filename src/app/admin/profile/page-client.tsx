@@ -5,29 +5,40 @@ import { useEffect, useState } from "react"
 import { Save, User } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminProfile, ProfileForm, ProfilePageClientProps } from "./interfaces"
+import type { AdminProfile, ProfileForm, ProfilePageClientProps, ProfileTranslationFields } from "./interfaces"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
 
 import { AlertBanner } from "../components/alert-banner"
 import { CheckboxField, Field, TextArea, TextInput, WhatsAppInput } from "../components/form-fields"
+import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { adminMutation } from "../../../lib/admin/admin-toast"
+import { hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 import { Button } from "@/components/ui/button"
+
+const TRANSLATION_KEYS: (keyof ProfileTranslationFields)[] = ["summary", "about_me", "location"]
+
+function emptyProfileTranslationFields(): ProfileTranslationFields {
+  return { summary: "", about_me: "", location: "" }
+}
 
 function profileToForm(profile: AdminProfile): ProfileForm {
   return {
     name: profile.name,
     last_name: profile.last_name,
-    summary: profile.summary,
-    about_me: profile.about_me,
-    location: profile.location,
     available: profile.available,
     email: profile.email,
     whatsapp: profile.whatsapp,
     linkedin: profile.linkedin,
     github: profile.github,
     gitlab: profile.gitlab,
+    translations: resolveTranslations(
+      TRANSLATION_KEYS,
+      profile.translations?.pt ?? {},
+      profile.translations,
+      emptyProfileTranslationFields,
+    ),
   }
 }
 
@@ -36,6 +47,7 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
 
   const [profile, setProfile] = useState(initialProfile)
   const [submitting, setSubmitting] = useState(false)
+  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
   const [form, setForm] = useState<ProfileForm | null>(() =>
     initialProfile ? profileToForm(initialProfile) : null,
   )
@@ -45,14 +57,27 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
     setForm(initialProfile ? profileToForm(initialProfile) : null)
   }, [initialProfile])
 
+  function setTranslationField(key: keyof ProfileTranslationFields, value: string) {
+    if (!form) return
+
+    setForm({
+      ...form,
+      translations: {
+        ...form.translations,
+        [activeLocale]: { ...form.translations[activeLocale], [key]: value },
+      },
+    })
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!canMutate || !form) return
 
     setSubmitting(true)
 
+    const { translations, ...shared } = form
     const data = await adminMutation<AdminProfile>(
-      () => API.put("/admin/profile", form),
+      () => API.put("/admin/profile", { ...shared, translations }),
       "Perfil salvo com sucesso.",
     )
     if (!data) {
@@ -64,6 +89,8 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
     await refreshAuth()
     setSubmitting(false)
   }
+
+  const translationFields = form?.translations[activeLocale]
 
   return (
     <div>
@@ -82,7 +109,7 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
           />
         )}
 
-        {!profile || !form ? (
+        {!profile || !form || !translationFields ? (
           <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
             <p className="text-sm text-zinc-500">Nenhum perfil cadastrado no banco de dados.</p>
           </div>
@@ -111,40 +138,48 @@ export function ProfilePageClient({ initialProfile }: ProfilePageClientProps) {
                 />
               </Field>
 
-              <Field label="Localização">
-                <TextInput
-                  disabled={!canMutate}
-                  placeholder="Ex: Rio de Janeiro, Brasil"
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                />
-              </Field>
-
               <CheckboxField
                 label="Disponível"
                 checked={form.available}
                 onChange={(checked) => setForm({ ...form, available: checked })}
               />
 
-              <Field label="Resumo">
-                <TextArea
-                  required
-                  disabled={!canMutate}
-                  placeholder="Breve apresentação profissional..."
-                  value={form.summary}
-                  onChange={(e) => setForm({ ...form, summary: e.target.value })}
+              <div className="space-y-4 border-t border-zinc-200 pt-5 dark:border-zinc-800">
+                <LocaleTabs
+                  active={activeLocale}
+                  onChange={setActiveLocale}
+                  enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
                 />
-              </Field>
 
-              <Field label="Sobre mim">
-                <TextArea
-                  required
-                  disabled={!canMutate}
-                  placeholder="Conte sua trajetória, stack e experiências..."
-                  value={form.about_me}
-                  onChange={(e) => setForm({ ...form, about_me: e.target.value })}
-                />
-              </Field>
+                <Field label="Localização">
+                  <TextInput
+                    disabled={!canMutate}
+                    placeholder="Ex: Rio de Janeiro, Brasil"
+                    value={translationFields.location}
+                    onChange={(e) => setTranslationField("location", e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Resumo">
+                  <TextArea
+                    required={activeLocale === "pt"}
+                    disabled={!canMutate}
+                    placeholder="Breve apresentação profissional..."
+                    value={translationFields.summary}
+                    onChange={(e) => setTranslationField("summary", e.target.value)}
+                  />
+                </Field>
+
+                <Field label="Sobre mim">
+                  <TextArea
+                    required={activeLocale === "pt"}
+                    disabled={!canMutate}
+                    placeholder="Conte sua trajetória, stack e experiências..."
+                    value={translationFields.about_me}
+                    onChange={(e) => setTranslationField("about_me", e.target.value)}
+                  />
+                </Field>
+              </div>
 
               <div className="border-t border-zinc-200 pt-5 dark:border-zinc-800">
                 <p className="mb-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">Contato profissional</p>

@@ -1,6 +1,5 @@
 export const FILTER_DEFAULTS = {
   q: "",
-  locale: "",
   seniority: "",
   show: "",
   active: "",

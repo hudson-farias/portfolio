@@ -6,53 +6,69 @@ import { FolderGit2, Plus } from "lucide-react"
 
 import { API } from "@/api/client"
 
-import type { AdminProject, ProjectForm, ProjectsPageClientProps } from "./interfaces"
+import type { AdminProject, ProjectForm, ProjectTranslationFields, ProjectsPageClientProps } from "./interfaces"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
 
 import { AlertBanner } from "../components/alert-banner"
 import { Field, TextArea, TextInput } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
+import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
 import { adminMutation } from "../../../lib/admin/admin-toast"
+import { emptyTranslations, hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 import { Button } from "@/components/ui/button"
 import { ProjectMeta } from "./project-meta"
 
+const TRANSLATION_KEYS: (keyof ProjectTranslationFields)[] = ["title", "description"]
+
+function emptyProjectTranslationFields(): ProjectTranslationFields {
+  return { title: "", description: "" }
+}
+
 const emptyForm: ProjectForm = {
-  title: "",
-  description: "",
   image_url: "",
   live_url: "",
   repo_url: "",
+  translations: emptyTranslations(emptyProjectTranslationFields),
 }
 
 function projectFormFromGitHub(project: AdminProject): ProjectForm {
   return {
-    title: project.name,
-    description: project.description ?? "",
     image_url: "",
     live_url: project.homepage ?? "",
     repo_url: project.html_url,
+    translations: resolveTranslations(
+      TRANSLATION_KEYS,
+      { title: project.name, description: project.description ?? "" },
+      project.translations,
+      emptyProjectTranslationFields,
+    ),
   }
 }
 
 function projectFormFromVisible(project: AdminProject): ProjectForm {
   return {
-    title: project.title ?? project.name,
-    description: project.description ?? "",
     image_url: project.image_url ?? "",
     live_url: project.live_url ?? project.homepage ?? "",
     repo_url: project.repo_url ?? project.html_url,
+    translations: resolveTranslations(
+      TRANSLATION_KEYS,
+      { title: project.title ?? project.name, description: project.description ?? "" },
+      project.translations,
+      emptyProjectTranslationFields,
+    ),
   }
 }
 
 function buildPayload(form: ProjectForm, includeRepoUrl: boolean) {
+  const { translations, ...shared } = form
   return {
-    title: form.title.trim(),
-    description: form.description.trim() || null,
+    ...shared,
     image_url: form.image_url.trim() || null,
     live_url: form.live_url.trim() || null,
+    translations,
     ...(includeRepoUrl ? { repo_url: form.repo_url.trim() || null } : {}),
   }
 }
@@ -66,6 +82,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
   const [addingGitId, setAddingGitId] = useState<number | null>(null)
   const [editingGitId, setEditingGitId] = useState<number | null>(null)
   const [externalAdd, setExternalAdd] = useState(false)
+  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
   const [form, setForm] = useState(emptyForm)
 
   const showRepoUrlInput =
@@ -79,6 +96,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     setExternalAdd(false)
     setAddingGitId(project.git_id)
     setEditingGitId(null)
+    setActiveLocale("pt")
     setForm(projectFormFromGitHub(project))
     setModalOpen(true)
   }
@@ -87,6 +105,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     setExternalAdd(true)
     setAddingGitId(null)
     setEditingGitId(null)
+    setActiveLocale("pt")
     setForm(emptyForm)
     setModalOpen(true)
   }
@@ -95,6 +114,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     setExternalAdd(false)
     setAddingGitId(null)
     setEditingGitId(project.git_id)
+    setActiveLocale("pt")
     setForm(projectFormFromVisible(project))
     setModalOpen(true)
   }
@@ -105,6 +125,16 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     setAddingGitId(null)
     setEditingGitId(null)
     setForm(emptyForm)
+  }
+
+  function setTranslationField(key: keyof ProjectTranslationFields, value: string) {
+    setForm((current) => ({
+      ...current,
+      translations: {
+        ...current.translations,
+        [activeLocale]: { ...current.translations[activeLocale], [key]: value },
+      },
+    }))
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -123,8 +153,8 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
         return API.put(`/admin/projects/${gitId}`, payload)
       },
       externalAdd || addingGitId !== null
-        ? `"${payload.title}" adicionado ao portfólio.`
-        : `"${payload.title}" atualizado com sucesso.`,
+        ? `"${payload.translations.pt.title}" adicionado ao portfólio.`
+        : `"${payload.translations.pt.title}" atualizado com sucesso.`,
     )
     setSubmitting(false)
     if (!next) return
@@ -145,6 +175,8 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
     setData(next)
     await refreshAuth()
   }
+
+  const translationFields = form.translations[activeLocale]
 
   return (
     <div>
@@ -278,6 +310,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
       </div>
 
       <FormModal
+        wide
         open={modalOpen}
         title={
           externalAdd
@@ -293,19 +326,26 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
         onClose={closeModal}
         onSubmit={handleSubmit}
       >
-        <Field label="Título">
-          <TextInput
-            required
-            value={form.title}
-            onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
+        <div className="space-y-4">
+          <LocaleTabs
+            active={activeLocale}
+            onChange={setActiveLocale}
+            enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
           />
-        </Field>
-        <Field label="Descrição">
-          <TextArea
-            value={form.description}
-            onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
-          />
-        </Field>
+          <Field label="Título">
+            <TextInput
+              required={activeLocale === "pt"}
+              value={translationFields.title}
+              onChange={(e) => setTranslationField("title", e.target.value)}
+            />
+          </Field>
+          <Field label="Descrição">
+            <TextArea
+              value={translationFields.description}
+              onChange={(e) => setTranslationField("description", e.target.value)}
+            />
+          </Field>
+        </div>
         <Field label="URL da imagem">
           <TextInput
             type="url"

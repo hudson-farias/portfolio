@@ -1,4 +1,10 @@
 import type { ContractType } from "@/types"
+import type { LocaleCode, Translations } from "@/lib/admin/locale"
+
+export interface ExperienceTranslationFields {
+  period: string
+  description: string
+}
 
 export interface AdminExperience {
   id: number
@@ -10,12 +16,12 @@ export interface AdminExperience {
   description: string
   live_url?: string | null
   hidden?: boolean
+  translations?: Translations<ExperienceTranslationFields>
 }
 
 export interface ExperienceRole {
   id: number
   title: string
-  locale: string | null
   active: boolean
 }
 
@@ -28,12 +34,11 @@ export type { ContractType }
 
 export interface ExperienceForm {
   company: string
-  period: string
   role_id: string
   contract_type: string
-  description: string
   live_url: string
   hidden: boolean
+  translations: Record<LocaleCode, ExperienceTranslationFields>
 }
 
 export interface ExperiencesPageClientProps {

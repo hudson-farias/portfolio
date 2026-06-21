@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { BadgeCheck } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminRole, LocaleOption, RoleForm, RoleSeniority, RolesPageClientProps, SeniorityOption } from "./interfaces"
+import type { AdminRole, RoleForm, RoleSeniority, RoleTranslationFields, RolesPageClientProps, SeniorityOption } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
@@ -15,36 +15,20 @@ import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../compo
 import { roleIconNames } from "@/components/icons/map"
 import { IconSelect } from "../components/icon-select"
 import { FormModal } from "../components/form-modal"
+import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
+import { emptyTranslations, hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 import { AppIcon } from "@/components/icons/app-icon"
-
-const FILTER_LOCALES: LocaleOption[] = [
-  { value: "", label: "Todos os locales" },
-  { value: "pt", label: "PT" },
-  { value: "en", label: "EN" },
-  { value: "none", label: "Sem locale" },
-]
 
 const BOOL_FILTER_OPTIONS = [
   { value: "", label: "Todos" },
   { value: "true", label: "Sim" },
   { value: "false", label: "Não" },
 ]
-
-const LOCALES: LocaleOption[] = [
-  { value: "", label: "Todos" },
-  { value: "pt", label: "PT" },
-  { value: "en", label: "EN" },
-]
-
-function localeLabel(locale: string | null) {
-  if (locale == null) return "Todos"
-  return locale.toUpperCase()
-}
 
 const SENIORITIES: SeniorityOption[] = [
   { value: "Junior", label: "Junior" },
@@ -53,18 +37,22 @@ const SENIORITIES: SeniorityOption[] = [
   { value: "Lead", label: "Lead" },
 ]
 
+const TRANSLATION_KEYS: (keyof RoleTranslationFields)[] = ["title", "summary"]
+
+function emptyRoleTranslationFields(): RoleTranslationFields {
+  return { title: "", summary: "" }
+}
+
 const emptyForm: RoleForm = {
-  title: "",
-  summary: "",
   category: "",
   seniority: "",
   show: false,
   featured: false,
-  locale: "pt",
   active: true,
   sort_order: 0,
   color: "",
   icon: "",
+  translations: emptyTranslations(emptyRoleTranslationFields),
 }
 
 function boolBadge(value: boolean, yes = "Sim", no = "Não") {
@@ -79,19 +67,34 @@ function boolBadge(value: boolean, yes = "Sim", no = "Não") {
   )
 }
 
-function formToPayload(form: RoleForm) {
+function roleToForm(item: AdminRole): RoleForm {
   return {
-    title: form.title,
-    summary: form.summary || null,
+    category: item.category ?? "",
+    seniority: item.seniority ?? "",
+    show: item.show,
+    featured: item.featured,
+    active: item.active,
+    sort_order: item.sort_order,
+    color: item.color ?? "",
+    icon: item.icon ?? "",
+    translations: resolveTranslations(
+      TRANSLATION_KEYS,
+      item.translations?.pt ?? { title: item.title, summary: "" },
+      item.translations,
+      emptyRoleTranslationFields,
+    ),
+  }
+}
+
+function formToPayload(form: RoleForm) {
+  const { translations, ...shared } = form
+  return {
+    ...shared,
     category: form.category || null,
     seniority: form.seniority ? (form.seniority as RoleSeniority) : null,
-    show: form.show,
-    featured: form.featured,
-    locale: form.locale || null,
-    active: form.active,
-    sort_order: form.sort_order,
     color: form.color || null,
     icon: form.icon || null,
+    translations,
   }
 }
 
@@ -103,30 +106,31 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
   const [form, setForm] = useState(emptyForm)
 
   function openCreate() {
     setEditingId(null)
+    setActiveLocale("pt")
     setForm(emptyForm)
     setModalOpen(true)
   }
 
   function openEdit(item: AdminRole) {
     setEditingId(item.id)
-    setForm({
-      title: item.title,
-      summary: item.summary ?? "",
-      category: item.category ?? "",
-      seniority: item.seniority ?? "",
-      show: item.show,
-      featured: item.featured,
-      locale: item.locale ?? null,
-      active: item.active,
-      sort_order: item.sort_order,
-      color: item.color ?? "",
-      icon: item.icon ?? "",
-    })
+    setActiveLocale("pt")
+    setForm(roleToForm(item))
     setModalOpen(true)
+  }
+
+  function setTranslationField(key: keyof RoleTranslationFields, value: string) {
+    setForm((current) => ({
+      ...current,
+      translations: {
+        ...current.translations,
+        [activeLocale]: { ...current.translations[activeLocale], [key]: value },
+      },
+    }))
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -165,6 +169,8 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
     await refreshAuth()
   }
 
+  const translationFields = form.translations[activeLocale]
+
   return (
     <div>
       <PageHeader
@@ -188,13 +194,6 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
           onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
           onClear={clearFilters}
         >
-          <AdminFilterField label="Locale">
-            <AdminFilterSelect
-              value={filters.locale}
-              onValueChange={(locale) => setFilters((current) => ({ ...current, locale }))}
-              options={FILTER_LOCALES.map(({ value, label }) => ({ value: value ?? "", label }))}
-            />
-          </AdminFilterField>
           <AdminFilterField label="Senioridade">
             <AdminFilterSelect
               value={filters.seniority}
@@ -232,7 +231,6 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
             <thead>
               <tr className={adminHeadRow}>
                 <th className={adminTh("min-w-48")}>Título</th>
-                <th className={adminTh("w-24")}>Locale</th>
                 <th className={adminTh("w-32")}>Categoria</th>
                 <th className={adminTh("w-28")}>Senioridade</th>
                 <th className={adminTh("w-20")}>Exibir</th>
@@ -256,7 +254,6 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
                       {item.title}
                     </div>
                   </td>
-                  <td className={adminTd("text-zinc-500")}>{localeLabel(item.locale)}</td>
                   <td className={adminTd("text-zinc-600 dark:text-zinc-400")}>{item.category ?? "—"}</td>
                   <td className={adminTd("text-zinc-600 dark:text-zinc-400")}>{item.seniority ?? "—"}</td>
                   <td className={adminTd()}>{boolBadge(item.show)}</td>
@@ -279,43 +276,33 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
       </div>
 
       <FormModal
+        wide
         open={modalOpen}
         title={editingId !== null ? "Editar cargo" : "Novo cargo"}
         submitting={submitting}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
       >
-        <Field label="Título">
-          <TextInput
-            required
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+        <div className="space-y-4">
+          <LocaleTabs
+            active={activeLocale}
+            onChange={setActiveLocale}
+            enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
           />
-        </Field>
-        <Field label="Locale">
-          <SelectInput
-            value={form.locale || ''}
-            onChange={(e) => setForm((f) => ({ ...f, locale: e.target.value }))}
-          >
-            {LOCALES.map(({ value, label }) => (
-              <option key={value || "all"} value={value || ''}>
-                {label}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-        <Field label="Resumo">
-          <TextArea
-            value={form.summary}
-            onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
-          />
-        </Field>
-        {/* <Field label="Categoria">
-          <TextInput
-            value={form.category}
-            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-          />
-        </Field> */}
+          <Field label="Título">
+            <TextInput
+              required={activeLocale === "pt"}
+              value={translationFields.title}
+              onChange={(e) => setTranslationField("title", e.target.value)}
+            />
+          </Field>
+          <Field label="Resumo">
+            <TextArea
+              value={translationFields.summary}
+              onChange={(e) => setTranslationField("summary", e.target.value)}
+            />
+          </Field>
+        </div>
         <Field label="Senioridade">
           <SelectInput
             value={form.seniority}

@@ -1,3 +1,10 @@
+import type { LocaleCode, Translations } from "@/lib/admin/locale"
+
+export interface ProjectTranslationFields {
+  title: string
+  description: string
+}
+
 export interface AdminProject {
   git_id: number
   name: string
@@ -16,6 +23,7 @@ export interface AdminProject {
   archived?: boolean
   fork?: boolean
   external?: boolean
+  translations?: Translations<ProjectTranslationFields>
 }
 
 export interface AdminProjects {
@@ -24,11 +32,10 @@ export interface AdminProjects {
 }
 
 export interface ProjectForm {
-  title: string
-  description: string
   image_url: string
   live_url: string
   repo_url: string
+  translations: Record<LocaleCode, ProjectTranslationFields>
 }
 
 export interface ProjectsPageClientProps {

@@ -6,17 +6,19 @@ import { useRouter } from "next/navigation"
 import { Briefcase } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminExperience, AdminExperiences, ContractType, ContractTypeOption, ExperienceForm, ExperiencesPageClientProps } from "./interfaces"
+import type { AdminExperience, AdminExperiences, ContractType, ContractTypeOption, ExperienceForm, ExperienceTranslationFields, ExperiencesPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
 import { FormModal } from "../components/form-modal"
+import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { ExperiencesTable } from "../components/experiences-table"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
+import { emptyTranslations, hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 
 const BOOL_FILTER_OPTIONS = [
   { value: "", label: "Todas" },
@@ -30,17 +32,38 @@ const CONTRACT_TYPES: ContractTypeOption[] = [
   { value: "FREELANCER", label: "Freelancer" },
 ]
 
+const TRANSLATION_KEYS: (keyof ExperienceTranslationFields)[] = ["period", "description"]
+
+function emptyExperienceTranslationFields(): ExperienceTranslationFields {
+  return { period: "", description: "" }
+}
+
 const emptyForm: ExperienceForm = {
   company: "",
-  period: "",
   role_id: "",
   contract_type: "",
-  description: "",
   live_url: "",
   hidden: false,
+  translations: emptyTranslations(emptyExperienceTranslationFields),
 }
 
 const emptyData: AdminExperiences = { experiences: [], roles: [] }
+
+function experienceToForm(item: AdminExperience): ExperienceForm {
+  return {
+    company: item.company,
+    role_id: item.role_id !== null ? String(item.role_id) : "",
+    contract_type: item.contract_type ?? "",
+    live_url: item.live_url ?? "",
+    hidden: item.hidden ?? false,
+    translations: resolveTranslations(
+      TRANSLATION_KEYS,
+      item.translations?.pt ?? {},
+      item.translations,
+      emptyExperienceTranslationFields,
+    ),
+  }
+}
 
 export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProps) {
   const router = useRouter()
@@ -57,10 +80,12 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
   const [modalOpen, setModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
   const [form, setForm] = useState(emptyForm)
 
   function openCreate() {
     setEditingId(null)
+    setActiveLocale("pt")
     setForm({
       ...emptyForm,
       role_id: roles[0] ? String(roles[0].id) : "",
@@ -70,27 +95,29 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
 
   function openEdit(item: AdminExperience) {
     setEditingId(item.id)
-    setForm({
-      company: item.company,
-      period: item.period,
-      role_id: item.role_id !== null ? String(item.role_id) : "",
-      contract_type: item.contract_type ?? "",
-      description: item.description,
-      live_url: item.live_url ?? "",
-      hidden: item.hidden ?? false,
-    })
+    setActiveLocale("pt")
+    setForm(experienceToForm(item))
     setModalOpen(true)
   }
 
+  function setTranslationField(key: keyof ExperienceTranslationFields, value: string) {
+    setForm((current) => ({
+      ...current,
+      translations: {
+        ...current.translations,
+        [activeLocale]: { ...current.translations[activeLocale], [key]: value },
+      },
+    }))
+  }
+
   function buildPayload() {
+    const { translations, ...shared } = form
     return {
-      company: form.company,
-      period: form.period,
+      ...shared,
       role_id: form.role_id ? Number(form.role_id) : null,
       contract_type: form.contract_type ? (form.contract_type as ContractType) : null,
-      description: form.description,
       live_url: form.live_url.trim() || null,
-      hidden: form.hidden,
+      translations,
     }
   }
 
@@ -129,6 +156,8 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
     router.refresh()
     await refreshAuth()
   }
+
+  const translationFields = form.translations[activeLocale]
 
   return (
     <div>
@@ -199,6 +228,7 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
       </div>
 
       <FormModal
+        wide
         open={modalOpen}
         title={editingId !== null ? "Editar experiência" : "Nova experiência"}
         submitting={submitting}
@@ -222,7 +252,7 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
               .filter((role) => role.active)
               .map((role) => (
                 <option key={role.id} value={role.id}>
-                  {role.title} ({role.locale == null ? "Todos" : role.locale.toUpperCase()})
+                  {role.title}
                 </option>
               ))}
           </SelectInput>
@@ -240,21 +270,30 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
             ))}
           </SelectInput>
         </Field>
-        <Field label="Período">
-          <TextInput
-            required
-            placeholder="Ex: Jan 2023 — Atual"
-            value={form.period}
-            onChange={(e) => setForm((f) => ({ ...f, period: e.target.value }))}
+
+        <div className="space-y-4 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <LocaleTabs
+            active={activeLocale}
+            onChange={setActiveLocale}
+            enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
           />
-        </Field>
-        <Field label="Descrição">
-          <TextArea
-            required
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          />
-        </Field>
+          <Field label="Período">
+            <TextInput
+              required={activeLocale === "pt"}
+              placeholder="Ex: Jan 2023 — Atual"
+              value={translationFields.period}
+              onChange={(e) => setTranslationField("period", e.target.value)}
+            />
+          </Field>
+          <Field label="Descrição">
+            <TextArea
+              required={activeLocale === "pt"}
+              value={translationFields.description}
+              onChange={(e) => setTranslationField("description", e.target.value)}
+            />
+          </Field>
+        </div>
+
         <Field label="URL da empresa (opcional)">
           <TextInput
             type="url"
