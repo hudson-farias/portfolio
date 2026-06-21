@@ -20,5 +20,4 @@ export interface FrameworkForm {
 
 export interface FrameworksPageClientProps {
   initialItems: AdminFramework[]
-  languages: AdminLanguage[]
 }

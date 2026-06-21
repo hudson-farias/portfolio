@@ -1,182 +1,36 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { FolderGit2, Plus } from "lucide-react"
 
 import { API } from "@/api/client"
 
-import type { AdminProject, ProjectForm, ProjectTranslationFields, ProjectsPageClientProps } from "./interfaces"
+import type { ProjectsPageClientProps } from "./interfaces"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
 
 import { AlertBanner } from "../components/alert-banner"
-import { Field, TextArea, TextInput } from "../components/form-fields"
-import { FormModal } from "../components/form-modal"
-import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
 import { adminMutation } from "../../../lib/admin/admin-toast"
-import { emptyTranslations, hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 import { Button } from "@/components/ui/button"
 import { ProjectMeta } from "./project-meta"
 
-const TRANSLATION_KEYS: (keyof ProjectTranslationFields)[] = ["title", "description"]
-
-function emptyProjectTranslationFields(): ProjectTranslationFields {
-  return { title: "", description: "" }
-}
-
-const emptyForm: ProjectForm = {
-  image_url: "",
-  live_url: "",
-  repo_url: "",
-  translations: emptyTranslations(emptyProjectTranslationFields),
-}
-
-function projectFormFromGitHub(project: AdminProject): ProjectForm {
-  return {
-    image_url: "",
-    live_url: project.homepage ?? "",
-    repo_url: project.html_url,
-    translations: resolveTranslations(
-      TRANSLATION_KEYS,
-      { title: project.name, description: project.description ?? "" },
-      project.translations,
-      emptyProjectTranslationFields,
-    ),
-  }
-}
-
-function projectFormFromVisible(project: AdminProject): ProjectForm {
-  return {
-    image_url: project.image_url ?? "",
-    live_url: project.live_url ?? project.homepage ?? "",
-    repo_url: project.repo_url ?? project.html_url,
-    translations: resolveTranslations(
-      TRANSLATION_KEYS,
-      { title: project.title ?? project.name, description: project.description ?? "" },
-      project.translations,
-      emptyProjectTranslationFields,
-    ),
-  }
-}
-
-function buildPayload(form: ProjectForm, includeRepoUrl: boolean) {
-  const { translations, ...shared } = form
-  return {
-    ...shared,
-    image_url: form.image_url.trim() || null,
-    live_url: form.live_url.trim() || null,
-    translations,
-    ...(includeRepoUrl ? { repo_url: form.repo_url.trim() || null } : {}),
-  }
-}
-
 export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
+  const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
-
-  const [data, setData] = useState(initialData)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [addingGitId, setAddingGitId] = useState<number | null>(null)
-  const [editingGitId, setEditingGitId] = useState<number | null>(null)
-  const [externalAdd, setExternalAdd] = useState(false)
-  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
-  const [form, setForm] = useState(emptyForm)
-
-  const showRepoUrlInput =
-    externalAdd || (editingGitId !== null && editingGitId < 0)
-
-  useEffect(() => {
-    setData(initialData)
-  }, [initialData])
-
-  function openAdd(project: AdminProject) {
-    setExternalAdd(false)
-    setAddingGitId(project.git_id)
-    setEditingGitId(null)
-    setActiveLocale("pt")
-    setForm(projectFormFromGitHub(project))
-    setModalOpen(true)
-  }
-
-  function openExternalAdd() {
-    setExternalAdd(true)
-    setAddingGitId(null)
-    setEditingGitId(null)
-    setActiveLocale("pt")
-    setForm(emptyForm)
-    setModalOpen(true)
-  }
-
-  function openEdit(project: AdminProject) {
-    setExternalAdd(false)
-    setAddingGitId(null)
-    setEditingGitId(project.git_id)
-    setActiveLocale("pt")
-    setForm(projectFormFromVisible(project))
-    setModalOpen(true)
-  }
-
-  function closeModal() {
-    setModalOpen(false)
-    setExternalAdd(false)
-    setAddingGitId(null)
-    setEditingGitId(null)
-    setForm(emptyForm)
-  }
-
-  function setTranslationField(key: keyof ProjectTranslationFields, value: string) {
-    setForm((current) => ({
-      ...current,
-      translations: {
-        ...current.translations,
-        [activeLocale]: { ...current.translations[activeLocale], [key]: value },
-      },
-    }))
-  }
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    if (!canMutate) return
-
-    const gitId = addingGitId ?? editingGitId
-    if (!externalAdd && gitId === null) return
-
-    setSubmitting(true)
-    const payload = buildPayload(form, showRepoUrlInput)
-    const next = await adminMutation<ProjectsPageClientProps["initialData"]>(
-      () => {
-        if (externalAdd) return API.post("/admin/projects/external", payload)
-        if (addingGitId !== null) return API.post(`/admin/projects/${addingGitId}`, payload)
-        return API.put(`/admin/projects/${gitId}`, payload)
-      },
-      externalAdd || addingGitId !== null
-        ? `"${payload.translations.pt.title}" adicionado ao portfólio.`
-        : `"${payload.translations.pt.title}" atualizado com sucesso.`,
-    )
-    setSubmitting(false)
-    if (!next) return
-    setData(next)
-    await refreshAuth()
-    closeModal()
-  }
 
   async function handleRemove(gitId: number) {
     if (!canMutate) return
     if (!window.confirm("Remover este projeto do portfólio?")) return
 
-    const next = await adminMutation<ProjectsPageClientProps["initialData"]>(
-      () => API.delete(`/admin/projects/${gitId}`),
-      "Projeto removido do portfólio.",
-    )
-    if (!next) return
-    setData(next)
+    const ok = await adminMutation(() => API.delete(`/admin/projects/${gitId}`), "Projeto removido do portfólio.")
+    if (!ok) return
+    router.refresh()
     await refreshAuth()
   }
-
-  const translationFields = form.translations[activeLocale]
 
   return (
     <div>
@@ -185,7 +39,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
         description="Selecione repositórios do GitHub ou cadastre projetos externos (GitLab, etc.)"
         icon={FolderGit2}
         canMutate={canMutate}
-        onAdd={openExternalAdd}
+        addHref="/admin/projects/new?external=1"
         addLabel="Projeto externo"
       />
 
@@ -201,15 +55,15 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
           <div>
             <h2 className="font-semibold">Visíveis no portfólio</h2>
             <p className="text-sm text-zinc-500">
-              {data.visible.length} projeto(s) selecionado(s)
+              {initialData.visible.length} projeto(s) selecionado(s)
             </p>
           </div>
 
-          {data.visible.length === 0 ? (
+          {initialData.visible.length === 0 ? (
             <p className="text-sm text-zinc-500">Nenhum projeto selecionado.</p>
           ) : (
             <ul className="space-y-3">
-              {data.visible.map((project) => (
+              {initialData.visible.map((project) => (
                 <li
                   key={project.git_id}
                   className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
@@ -250,7 +104,7 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                   {canMutate && (
                     <RowActions
                       canMutate
-                      onEdit={() => openEdit(project)}
+                      editHref={`/admin/projects/${project.git_id}`}
                       onDelete={() => handleRemove(project.git_id)}
                     />
                   )}
@@ -268,11 +122,11 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
             </p>
           </div>
 
-          {data.options.length === 0 ? (
+          {initialData.options.length === 0 ? (
             <p className="text-sm text-zinc-500">Nenhum repositório disponível para adicionar.</p>
           ) : (
             <ul className="space-y-3">
-              {data.options.map((project) => (
+              {initialData.options.map((project) => (
                 <li
                   key={project.git_id}
                   className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed border-zinc-200 p-4 dark:border-zinc-800"
@@ -292,14 +146,11 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
                     </a>
                   </div>
                   {canMutate && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5"
-                      onClick={() => openAdd(project)}
-                    >
-                      <Plus className="size-3.5" />
-                      Adicionar
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                      <Link href={`/admin/projects/new?git_id=${project.git_id}`}>
+                        <Plus className="size-3.5" />
+                        Adicionar
+                      </Link>
                     </Button>
                   )}
                 </li>
@@ -308,72 +159,6 @@ export function ProjectsPageClient({ initialData }: ProjectsPageClientProps) {
           )}
         </section>
       </div>
-
-      <FormModal
-        wide
-        open={modalOpen}
-        title={
-          externalAdd
-            ? "Adicionar projeto externo"
-            : addingGitId !== null
-              ? "Adicionar projeto"
-              : editingGitId !== null && editingGitId < 0
-                ? "Editar projeto externo"
-                : "Editar projeto"
-        }
-        submitting={submitting}
-        submitLabel={externalAdd || addingGitId !== null ? "Adicionar" : "Salvar"}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-      >
-        <div className="space-y-4">
-          <LocaleTabs
-            active={activeLocale}
-            onChange={setActiveLocale}
-            enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
-          />
-          <Field label="Título">
-            <TextInput
-              required={activeLocale === "pt"}
-              value={translationFields.title}
-              onChange={(e) => setTranslationField("title", e.target.value)}
-            />
-          </Field>
-          <Field label="Descrição">
-            <TextArea
-              value={translationFields.description}
-              onChange={(e) => setTranslationField("description", e.target.value)}
-            />
-          </Field>
-        </div>
-        <Field label="URL da imagem">
-          <TextInput
-            type="url"
-            placeholder="https://..."
-            value={form.image_url}
-            onChange={(e) => setForm((current) => ({ ...current, image_url: e.target.value }))}
-          />
-        </Field>
-        <Field label="URL da demo (opcional)">
-          <TextInput
-            type="url"
-            placeholder="https://..."
-            value={form.live_url}
-            onChange={(e) => setForm((current) => ({ ...current, live_url: e.target.value }))}
-          />
-        </Field>
-        {showRepoUrlInput && (
-          <Field label="URL do repositório">
-            <TextInput
-              required
-              type="url"
-              placeholder="https://gitlab.com/..."
-              value={form.repo_url}
-              onChange={(e) => setForm((current) => ({ ...current, repo_url: e.target.value }))}
-            />
-          </Field>
-        )}
-      </FormModal>
     </div>
   )
 }

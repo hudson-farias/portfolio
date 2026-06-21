@@ -6,36 +6,18 @@ import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronUp, Wrench } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminTool, ToolForm, ToolsPageClientProps } from "./interfaces"
+import type { AdminTool, ToolsPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { AdminListFilters } from "../components/admin-list-filters"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
-import { Field, TextInput } from "../components/form-fields"
-import { IconSelect } from "../components/icon-select"
-import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
-import { toolIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
 import { Button } from "@/components/ui/button"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
-
-const emptyForm: ToolForm = {
-  name: "",
-  icon: "",
-  url: "",
-}
-
-function formToPayload(form: ToolForm) {
-  return {
-    name: form.name,
-    icon: form.icon,
-    url: form.url.trim() || null,
-  }
-}
 
 export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
   const router = useRouter()
@@ -43,33 +25,13 @@ export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
 
   const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
   const [items, setItems] = useState(initialItems)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
   const [reordering, setReordering] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [form, setForm] = useState(emptyForm)
 
   const reorderDisabled = Boolean(filters.q)
 
   useEffect(() => {
     setItems(initialItems)
   }, [initialItems])
-
-  function openCreate() {
-    setEditingId(null)
-    setForm(emptyForm)
-    setModalOpen(true)
-  }
-
-  function openEdit(item: AdminTool) {
-    setEditingId(item.id)
-    setForm({
-      name: item.name,
-      icon: item.icon,
-      url: item.url ?? "",
-    })
-    setModalOpen(true)
-  }
 
   async function persistOrder(nextItems: AdminTool[]) {
     if (!canMutate || reorderDisabled) return
@@ -99,29 +61,6 @@ export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
     await persistOrder(nextItems)
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    if (!canMutate) return
-
-    setSubmitting(true)
-    const payload = formToPayload(form)
-    const data = await adminMutation<AdminTool[]>(
-      () =>
-        editingId !== null
-          ? API.put(`/admin/tools/${editingId}`, payload)
-          : API.post("/admin/tools", payload),
-      editingId !== null ? "Ferramenta atualizada com sucesso." : "Ferramenta criada com sucesso.",
-    )
-    if (!data) {
-      setSubmitting(false)
-      return
-    }
-    router.refresh()
-    await refreshAuth()
-    setModalOpen(false)
-    setSubmitting(false)
-  }
-
   async function handleDelete(id: number) {
     if (!canMutate) return
     if (!window.confirm("Excluir esta ferramenta?")) return
@@ -142,7 +81,7 @@ export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
         description="Ferramentas que você usa no dia a dia"
         icon={Wrench}
         canMutate={canMutate}
-        onAdd={openCreate}
+        addHref="/admin/tools/new"
       />
 
       <div className="space-y-4 p-6 md:p-8">
@@ -232,7 +171,7 @@ export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
                     <td className={adminTd()}>
                       <RowActions
                         canMutate
-                        onEdit={() => openEdit(item)}
+                        editHref={`/admin/tools/${item.id}`}
                         onDelete={() => handleDelete(item.id)}
                       />
                     </td>
@@ -243,38 +182,6 @@ export function ToolsPageClient({ initialItems }: ToolsPageClientProps) {
           </AdminTable>
         )}
       </div>
-
-      <FormModal
-        open={modalOpen}
-        title={editingId !== null ? "Editar ferramenta" : "Nova ferramenta"}
-        submitting={submitting}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-      >
-        <Field label="Nome">
-          <TextInput
-            required
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          />
-        </Field>
-        <Field label="URL">
-          <TextInput
-            type="url"
-            placeholder="https://..."
-            value={form.url}
-            onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
-          />
-        </Field>
-        <Field label="Ícone">
-          <IconSelect
-            required
-            options={toolIconNames}
-            value={form.icon}
-            onChange={(icon) => setForm((f) => ({ ...f, icon }))}
-          />
-        </Field>
-      </FormModal>
     </div>
   )
 }

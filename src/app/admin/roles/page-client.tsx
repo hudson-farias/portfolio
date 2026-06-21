@@ -1,27 +1,20 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { BadgeCheck } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminRole, RoleForm, RoleSeniority, RoleTranslationFields, RolesPageClientProps, SeniorityOption } from "./interfaces"
+import type { AdminRole, RolesPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
-import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
-import { roleIconNames } from "@/components/icons/map"
-import { IconSelect } from "../components/icon-select"
-import { FormModal } from "../components/form-modal"
-import { LocaleTabs } from "../components/locale-tabs"
 import { PageHeader } from "../components/page-header"
 import { RowActions } from "../components/row-actions"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
-import { emptyTranslations, hasPendingEn, resolveTranslations, type LocaleCode } from "@/lib/admin/locale"
 import { AppIcon } from "@/components/icons/app-icon"
 
 const BOOL_FILTER_OPTIONS = [
@@ -30,30 +23,12 @@ const BOOL_FILTER_OPTIONS = [
   { value: "false", label: "Não" },
 ]
 
-const SENIORITIES: SeniorityOption[] = [
+const SENIORITIES = [
   { value: "Junior", label: "Junior" },
   { value: "Pleno", label: "Pleno" },
   { value: "Senior", label: "Senior" },
   { value: "Lead", label: "Lead" },
 ]
-
-const TRANSLATION_KEYS: (keyof RoleTranslationFields)[] = ["title", "summary"]
-
-function emptyRoleTranslationFields(): RoleTranslationFields {
-  return { title: "", summary: "" }
-}
-
-const emptyForm: RoleForm = {
-  category: "",
-  seniority: "",
-  show: false,
-  featured: false,
-  active: true,
-  sort_order: 0,
-  color: "",
-  icon: "",
-  translations: emptyTranslations(emptyRoleTranslationFields),
-}
 
 function boolBadge(value: boolean, yes = "Sim", no = "Não") {
   return value ? (
@@ -67,109 +42,21 @@ function boolBadge(value: boolean, yes = "Sim", no = "Não") {
   )
 }
 
-function roleToForm(item: AdminRole): RoleForm {
-  return {
-    category: item.category ?? "",
-    seniority: item.seniority ?? "",
-    show: item.show,
-    featured: item.featured,
-    active: item.active,
-    sort_order: item.sort_order,
-    color: item.color ?? "",
-    icon: item.icon ?? "",
-    translations: resolveTranslations(
-      TRANSLATION_KEYS,
-      item.translations?.pt ?? { title: item.title, summary: "" },
-      item.translations,
-      emptyRoleTranslationFields,
-    ),
-  }
-}
-
-function formToPayload(form: RoleForm) {
-  const { translations, ...shared } = form
-  return {
-    ...shared,
-    category: form.category || null,
-    seniority: form.seniority ? (form.seniority as RoleSeniority) : null,
-    color: form.color || null,
-    icon: form.icon || null,
-    translations,
-  }
-}
-
 export function RolesPageClient({ initialItems }: RolesPageClientProps) {
   const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
 
   const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
-  const [form, setForm] = useState(emptyForm)
-
-  function openCreate() {
-    setEditingId(null)
-    setActiveLocale("pt")
-    setForm(emptyForm)
-    setModalOpen(true)
-  }
-
-  function openEdit(item: AdminRole) {
-    setEditingId(item.id)
-    setActiveLocale("pt")
-    setForm(roleToForm(item))
-    setModalOpen(true)
-  }
-
-  function setTranslationField(key: keyof RoleTranslationFields, value: string) {
-    setForm((current) => ({
-      ...current,
-      translations: {
-        ...current.translations,
-        [activeLocale]: { ...current.translations[activeLocale], [key]: value },
-      },
-    }))
-  }
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    if (!canMutate) return
-
-    setSubmitting(true)
-    const payload = formToPayload(form)
-    const data = await adminMutation<AdminRole[]>(
-      () =>
-        editingId !== null
-          ? API.put(`/admin/roles/${editingId}`, payload)
-          : API.post("/admin/roles", payload),
-      editingId !== null ? "Cargo atualizado com sucesso." : "Cargo criado com sucesso.",
-    )
-    if (!data) {
-      setSubmitting(false)
-      return
-    }
-    router.refresh()
-    await refreshAuth()
-    setModalOpen(false)
-    setSubmitting(false)
-  }
 
   async function handleDelete(id: number) {
     if (!canMutate) return
     if (!window.confirm("Excluir este cargo? Experiências vinculadas ficarão sem cargo.")) return
 
-    const data = await adminMutation<AdminRole[]>(
-      () => API.delete(`/admin/roles/${id}`),
-      "Cargo excluído com sucesso.",
-    )
-    if (!data) return
+    const ok = await adminMutation(() => API.delete(`/admin/roles/${id}`), "Cargo excluído com sucesso.")
+    if (!ok) return
     router.refresh()
     await refreshAuth()
   }
-
-  const translationFields = form.translations[activeLocale]
 
   return (
     <div>
@@ -178,7 +65,7 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
         description="Catálogo de cargos reutilizáveis em experiências e exibição pública"
         icon={BadgeCheck}
         canMutate={canMutate}
-        onAdd={openCreate}
+        addHref="/admin/roles/new"
       />
 
       <div className="space-y-4 p-6 md:p-8">
@@ -263,7 +150,7 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
                     <td className={adminTd()}>
                       <RowActions
                         canMutate
-                        onEdit={() => openEdit(item)}
+                        editHref={`/admin/roles/${item.id}`}
                         onDelete={() => handleDelete(item.id)}
                       />
                     </td>
@@ -274,97 +161,6 @@ export function RolesPageClient({ initialItems }: RolesPageClientProps) {
           </AdminTable>
         )}
       </div>
-
-      <FormModal
-        wide
-        open={modalOpen}
-        title={editingId !== null ? "Editar cargo" : "Novo cargo"}
-        submitting={submitting}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-      >
-        <div className="space-y-4">
-          <LocaleTabs
-            active={activeLocale}
-            onChange={setActiveLocale}
-            enPending={hasPendingEn(form.translations, TRANSLATION_KEYS)}
-          />
-          <Field label="Título">
-            <TextInput
-              required={activeLocale === "pt"}
-              value={translationFields.title}
-              onChange={(e) => setTranslationField("title", e.target.value)}
-            />
-          </Field>
-          <Field label="Resumo">
-            <TextArea
-              value={translationFields.summary}
-              onChange={(e) => setTranslationField("summary", e.target.value)}
-            />
-          </Field>
-        </div>
-        <Field label="Senioridade">
-          <SelectInput
-            value={form.seniority}
-            onChange={(e) => setForm((f) => ({ ...f, seniority: e.target.value }))}
-          >
-            <option value="">—</option>
-            {SENIORITIES.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-        <Field label="Ordem">
-          <TextInput
-            required
-            type="number"
-            min={0}
-            value={form.sort_order}
-            onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) }))}
-          />
-        </Field>
-        <Field label="Cor">
-          <div className="flex gap-2">
-            <TextInput
-              type="color"
-              className="h-10 w-14 shrink-0 cursor-pointer p-1"
-              value={form.color || "#3b82f6"}
-              onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-            />
-            <TextInput
-              placeholder="#3b82f6"
-              value={form.color}
-              onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-            />
-          </div>
-        </Field>
-        <Field label="Ícone">
-          <IconSelect
-            options={roleIconNames}
-            value={form.icon}
-            onChange={(icon) => setForm((f) => ({ ...f, icon }))}
-          />
-        </Field>
-        <div className="flex flex-wrap gap-4">
-          <CheckboxField
-            label="Exibir no site"
-            checked={form.show}
-            onChange={(checked) => setForm((f) => ({ ...f, show: checked }))}
-          />
-          <CheckboxField
-            label="Destaque"
-            checked={form.featured}
-            onChange={(checked) => setForm((f) => ({ ...f, featured: checked }))}
-          />
-          <CheckboxField
-            label="Ativo"
-            checked={form.active}
-            onChange={(checked) => setForm((f) => ({ ...f, active: checked }))}
-          />
-        </div>
-      </FormModal>
     </div>
   )
 }

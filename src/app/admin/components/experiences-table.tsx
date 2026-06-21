@@ -12,17 +12,7 @@ function displayRole(item: ExperienceItem) {
   return item.role
 }
 
-export function ExperiencesTable({
-  items,
-  canMutate,
-  onEdit,
-  onDelete,
-}: {
-  items: ExperienceItem[]
-  canMutate: boolean
-  onEdit?: (item: ExperienceItem) => void
-  onDelete?: (id: number) => void
-}) {
+export function ExperiencesTable({ items, canMutate, onEdit, getEditHref, onDelete }: { items: ExperienceItem[]; canMutate: boolean; onEdit?: (item: ExperienceItem) => void; getEditHref?: (item: ExperienceItem) => string; onDelete?: (id: number) => void }) {
   return (
     <AdminTable scrollable>
       <thead>
@@ -79,11 +69,12 @@ export function ExperiencesTable({
                 )}
               </td>
             )}
-            {canMutate && onEdit && onDelete && (
+            {canMutate && (onEdit || getEditHref) && onDelete && (
               <td className={adminTd()}>
                 <RowActions
                   canMutate
-                  onEdit={() => onEdit(item)}
+                  editHref={getEditHref?.(item)}
+                  onEdit={getEditHref ? undefined : () => onEdit?.(item)}
                   onDelete={() => onDelete(item.id)}
                 />
               </td>

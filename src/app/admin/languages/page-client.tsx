@@ -6,27 +6,18 @@ import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronUp, Languages } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminLanguage, LanguageForm, LanguagesPageClientProps } from "./interfaces"
+import type { AdminLanguage, LanguagesPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { AdminListFilters } from "../components/admin-list-filters"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
-import { Field, TextInput } from "../components/form-fields"
-import { IconSelect } from "../components/icon-select"
-import { FormModal } from "../components/form-modal"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
-import { languageIconNames } from "@/components/icons/map"
 import { RowActions } from "../components/row-actions"
 import { Button } from "@/components/ui/button"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
-
-const emptyForm: LanguageForm = {
-  name: "",
-  icon: "",
-}
 
 export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) {
   const router = useRouter()
@@ -34,32 +25,13 @@ export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) 
 
   const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
   const [items, setItems] = useState(initialItems)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
   const [reordering, setReordering] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [form, setForm] = useState(emptyForm)
 
   const reorderDisabled = Boolean(filters.q)
 
   useEffect(() => {
     setItems(initialItems)
   }, [initialItems])
-
-  function openCreate() {
-    setEditingId(null)
-    setForm(emptyForm)
-    setModalOpen(true)
-  }
-
-  function openEdit(item: AdminLanguage) {
-    setEditingId(item.id)
-    setForm({
-      name: item.name,
-      icon: item.icon,
-    })
-    setModalOpen(true)
-  }
 
   async function persistOrder(nextItems: AdminLanguage[]) {
     if (!canMutate || reorderDisabled) return
@@ -89,28 +61,6 @@ export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) 
     await persistOrder(nextItems)
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    if (!canMutate) return
-
-    setSubmitting(true)
-    const data = await adminMutation<AdminLanguage[]>(
-      () =>
-        editingId !== null
-          ? API.put(`/admin/languages/${editingId}`, form)
-          : API.post("/admin/languages", form),
-      editingId !== null ? "Linguagem atualizada com sucesso." : "Linguagem criada com sucesso.",
-    )
-    if (!data) {
-      setSubmitting(false)
-      return
-    }
-    router.refresh()
-    await refreshAuth()
-    setModalOpen(false)
-    setSubmitting(false)
-  }
-
   async function handleDelete(id: number) {
     if (!canMutate) return
     if (!window.confirm("Excluir esta linguagem?")) return
@@ -131,7 +81,7 @@ export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) 
         description="Linguagens vinculadas aos frameworks"
         icon={Languages}
         canMutate={canMutate}
-        onAdd={openCreate}
+        addHref="/admin/languages/new"
       />
 
       <div className="space-y-4 p-6 md:p-8">
@@ -198,7 +148,11 @@ export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) 
                   </td>
                   {canMutate && (
                     <td className={adminTd()}>
-                      <RowActions canMutate onEdit={() => openEdit(item)} onDelete={() => handleDelete(item.id)} />
+                      <RowActions
+                        canMutate
+                        editHref={`/admin/languages/${item.id}`}
+                        onDelete={() => handleDelete(item.id)}
+                      />
                     </td>
                   )}
                 </tr>
@@ -207,30 +161,6 @@ export function LanguagesPageClient({ initialItems }: LanguagesPageClientProps) 
           </AdminTable>
         )}
       </div>
-
-      <FormModal
-        open={modalOpen}
-        title={editingId !== null ? "Editar linguagem" : "Nova linguagem"}
-        submitting={submitting}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
-      >
-        <Field label="Nome">
-          <TextInput
-            required
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          />
-        </Field>
-        <Field label="Ícone">
-          <IconSelect
-            required
-            options={languageIconNames}
-            value={form.icon}
-            onChange={(icon) => setForm((f) => ({ ...f, icon }))}
-          />
-        </Field>
-      </FormModal>
     </div>
   )
 }
