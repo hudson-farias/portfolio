@@ -14,6 +14,7 @@ import {
   uniqueLanguagesFromFrameworks,
   type ResumeFilterState,
 } from "@/lib/resume-filters"
+import { siteFrameworkScopeLabel } from "@/lib/framework-scope"
 import type { Database, Experience, Framework, LanguageRef, Skill, Tool } from "@/types"
 
 function toggleValue<T>(values: T[], value: T) {
@@ -98,12 +99,6 @@ export function ResumeBuilder({
     [databases, filters],
   )
 
-  function scopeLabel(scope: Framework["scope"]) {
-    if (scope === "backend") return t.common.backend
-    if (scope === "frontend") return t.common.frontend
-    return undefined
-  }
-
   function databaseScopeLabel(scope: Database["scope"]) {
     if (scope === "sql") return t.common.sql
     if (scope === "nosql") return t.common.nosql
@@ -138,7 +133,7 @@ export function ResumeBuilder({
             <div className="grid max-h-56 gap-2 overflow-y-auto sm:grid-cols-2">
               {frameworks.map((framework) => {
                 const hint = [
-                  scopeLabel(framework.scope),
+                  siteFrameworkScopeLabel(framework.scope ?? null, t.common),
                   framework.languages.length > 0
                     ? framework.languages.map((language) => language.name).join(", ")
                     : undefined,

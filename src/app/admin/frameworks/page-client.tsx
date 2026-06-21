@@ -19,11 +19,7 @@ import { Button } from "@/components/ui/button"
 import { adminMutation } from "@/lib/admin/admin-toast"
 import { useAdminFilters } from "@/lib/admin/use-admin-filters"
 
-function scopeLabel(scope: AdminFramework["scope"]) {
-  if (scope === "backend") return "Backend"
-  if (scope === "frontend") return "Frontend"
-  return "—"
-}
+import { adminFrameworkScopeLabel } from "@/lib/framework-scope"
 
 export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps) {
   const router = useRouter()
@@ -154,7 +150,7 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
                       {item.name}
                     </span>
                   </td>
-                  <td className={adminTd("text-zinc-500")}>{scopeLabel(item.scope)}</td>
+                  <td className={adminTd("text-zinc-500")}>{adminFrameworkScopeLabel(item.scope)}</td>
                   <td className={adminTd("text-zinc-500")}>
                     {item.languages.length > 0
                       ? item.languages.map((language) => language.name).join(", ")

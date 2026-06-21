@@ -1,12 +1,7 @@
+import { adminFrameworkScopeLabel } from "@/lib/framework-scope"
+import type { AdminFramework } from "../frameworks/interfaces"
 import { AppIcon } from "@/components/icons/app-icon"
 import { AdminTable, adminBodyRow, adminHeadRow, adminTd, adminTh } from "./admin-table"
-import type { AdminFramework } from "../frameworks/interfaces"
-
-function scopeLabel(scope: AdminFramework["scope"]) {
-  if (scope === "backend") return "Backend"
-  if (scope === "frontend") return "Frontend"
-  return "—"
-}
 
 export const FrameworksTable = ({ items }: { items: AdminFramework[] }) => {
   return (
@@ -26,7 +21,7 @@ export const FrameworksTable = ({ items }: { items: AdminFramework[] }) => {
                 <span className="font-medium">{item.name}</span>
               </span>
             </td>
-            <td className={adminTd()}>{scopeLabel(item.scope)}</td>
+            <td className={adminTd()}>{adminFrameworkScopeLabel(item.scope)}</td>
           </tr>
         ))}
       </tbody>

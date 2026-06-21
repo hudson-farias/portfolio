@@ -31,6 +31,10 @@
   "common": {
     "backend": "Backend",
     "frontend": "Frontend",
+    "fullstack": "Full stack",
+    "mobile": "Mobile",
+    "automation": "Automation",
+    "other": "Other",
     "sql": "SQL",
     "nosql": "NoSQL",
     "repository": "Repository",
@@ -55,6 +59,10 @@
     "description": "What I use to build backend, frontend, and automations.",
     "emptyBackend": "No backend frameworks.",
     "emptyFrontend": "No frontend frameworks.",
+    "emptyFullstack": "No full stack frameworks.",
+    "emptyMobile": "No mobile frameworks.",
+    "emptyAutomation": "No automation frameworks.",
+    "emptyOther": "No frameworks in other scopes.",
     "ctaAll": "View all frameworks",
     "cta": "View frameworks"
   },
@@ -122,8 +130,14 @@
   },
   "frameworks": {
     "title": "Frameworks",
-    "description": "Frameworks and libraries I use daily for backend and frontend.",
+    "description": "Frameworks and libraries I use daily across backend, frontend, mobile, automation, and more.",
     "empty": "No frameworks registered.",
+    "emptyBackend": "No backend frameworks.",
+    "emptyFrontend": "No frontend frameworks.",
+    "emptyFullstack": "No full stack frameworks.",
+    "emptyMobile": "No mobile frameworks.",
+    "emptyAutomation": "No automation frameworks.",
+    "emptyOther": "No frameworks in other scopes.",
     "meta": {
       "title": "Frameworks",
       "description": "Frameworks and libraries I use daily for backend and frontend."

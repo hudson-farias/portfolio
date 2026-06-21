@@ -13,6 +13,7 @@ import { Field, SelectInput, TextInput } from "../components/form-fields"
 import { IconSelect } from "../components/icon-select"
 import { AppIcon } from "@/components/icons/app-icon"
 import { adminMutation } from "@/lib/admin/admin-toast"
+import { ADMIN_FRAMEWORK_SCOPE_OPTIONS } from "@/lib/framework-scope"
 import { frameworkIconNames } from "@/components/icons/map"
 
 function formToPayload(form: FrameworkForm) {
@@ -90,8 +91,11 @@ export const FrameworksFormClient = ({ mode, frameworkId, initialForm, languages
             onChange={(e) => setForm((current) => ({ ...current, scope: e.target.value as FrameworkForm["scope"] }))}
           >
             <option value="">Nenhum</option>
-            <option value="backend">Backend</option>
-            <option value="frontend">Frontend</option>
+            {ADMIN_FRAMEWORK_SCOPE_OPTIONS.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </SelectInput>
         </Field>
         <Field label="Ícone">

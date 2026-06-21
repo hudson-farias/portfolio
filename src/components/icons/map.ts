@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { Bot, Code, Database, Globe, Mail, Server, Webhook, Workflow, type LucideIcon } from "lucide-react"
+import { Bot, Clock, Code, Database, Globe, Mail, Server, Webhook, Workflow, type LucideIcon } from "lucide-react"
 
 import { DiscordIcon } from "./brands/discord"
 import { FacebookIcon } from "./brands/facebook"
@@ -14,9 +14,13 @@ import { XIcon } from "./brands/x"
 import { YoutubeIcon } from "./brands/youtube"
 import { ArchIcon } from "./tech/arch"
 import { AsdfIcon } from "./tech/asdf"
+import { AiohttpIcon } from "./tech/aiohttp"
+import { Beautifulsoup4Icon } from "./tech/beautifulsoup4"
+import { CeleryIcon } from "./tech/celery"
 import { CsharpIcon } from "./tech/csharp"
 import { CssIcon } from "./tech/css"
 import { CursorIcon } from "./tech/cursor"
+import { CypressIcon } from "./tech/cypress"
 import { DbeaverIcon } from "./tech/dbeaver"
 import { DockerIcon } from "./tech/docker"
 import { DotnetIcon } from "./tech/dotnet"
@@ -24,8 +28,10 @@ import { FastapiIcon } from "./tech/fastapi"
 import { FigmaIcon } from "./tech/figma"
 import { GitIcon } from "./tech/git"
 import { HtmlIcon } from "./tech/html"
+import { HttpxIcon } from "./tech/httpx"
 import { InsomniaIcon } from "./tech/insomnia"
 import { JavascriptIcon } from "./tech/javascript"
+import { JestIcon } from "./tech/jest"
 import { LaravelIcon } from "./tech/laravel"
 import { LinuxIcon } from "./tech/linux"
 import { KubernetesIcon } from "./tech/kubernetes"
@@ -37,12 +43,18 @@ import { NginxIcon } from "./tech/nginx"
 import { NodejsIcon } from "./tech/nodejs"
 import { PhpIcon } from "./tech/php"
 import { PgadminIcon } from "./tech/pgadmin"
+import { PydanticIcon } from "./tech/pydantic"
 import { PlaywrightIcon } from "./tech/playwright"
 import { PostgresqlIcon } from "./tech/postgresql"
 import { PostmanIcon } from "./tech/postman"
+import { PuppeteerIcon } from "./tech/puppeteer"
+import { PytestIcon } from "./tech/pytest"
 import { PythonIcon } from "./tech/python"
 import { ReactIcon } from "./tech/react"
 import { RedisIcon } from "./tech/redis"
+import { ScrapyIcon } from "./tech/scrapy"
+import { SeleniumIcon } from "./tech/selenium"
+import { SqlalchemyIcon } from "./tech/sqlalchemy"
 import { SwaggerIcon } from "./tech/swagger"
 import { TailwindIcon } from "./tech/tailwind"
 import { TypescriptIcon } from "./tech/typescript"
@@ -59,11 +71,16 @@ export const iconNames = [
   "api",
   "arch",
   "asdf",
+  "aiohttp",
   "bot",
+  "beautifulsoup4",
+  "celery",
   "code",
   "csharp",
   "css",
   "cursor",
+  "cronjob",
+  "cypress",
   "database",
   "dbeaver",
   "discord",
@@ -77,9 +94,11 @@ export const iconNames = [
   "gitlab",
   "globe",
   "html",
+  "httpx",
   "insomnia",
   "instagram",
   "javascript",
+  "jest",
   "laravel",
   "kubernetes",
   "linkedin",
@@ -97,10 +116,16 @@ export const iconNames = [
   "playwright",
   "postgresql",
   "postman",
+  "pydantic",
+  "puppeteer",
+  "pytest",
   "python",
   "react",
   "redis",
+  "scrapy",
+  "selenium",
   "server",
+  "sqlalchemy",
   "swagger",
   "tailwind",
   "telegram",
@@ -156,12 +181,26 @@ export const languageIconNames = [
 ] as const
 
 export const frameworkIconNames = [
+  "aiohttp",
+  "beautifulsoup4",
+  "celery",
+  "cronjob",
+  "cypress",
   "dotnet",
   "fastapi",
+  "httpx",
+  "jest",
   "laravel",
   "nextjs",
   "nodejs",
+  "playwright",
+  "pydantic",
+  "puppeteer",
+  "pytest",
   "react",
+  "scrapy",
+  "selenium",
+  "sqlalchemy",
   "tailwind",
   "vite",
 ] as const
@@ -214,7 +253,6 @@ export const toolIconNames = [
   "nginx",
   "pgadmin",
   "pipeline",
-  "playwright",
   "postman",
   "server",
   "swagger",
@@ -224,14 +262,20 @@ export const toolIconNames = [
 ] as const
 
 export const iconMap: Record<string, IconComponent> = {
+  aiohttp: AiohttpIcon,
   api: Webhook,
   arch: ArchIcon,
   asdf: AsdfIcon,
   bot: Bot,
+  beautifulsoup4: Beautifulsoup4Icon,
+  bs4: Beautifulsoup4Icon,
+  celery: CeleryIcon,
   code: Code,
   csharp: CsharpIcon,
   css: CssIcon,
   cursor: CursorIcon,
+  cronjob: Clock,
+  cypress: CypressIcon,
   database: Database,
   dbeaver: DbeaverIcon,
   discord: DiscordIcon,
@@ -245,9 +289,11 @@ export const iconMap: Record<string, IconComponent> = {
   gitlab: GitlabIcon,
   globe: Globe,
   html: HtmlIcon,
+  httpx: HttpxIcon,
   insomnia: InsomniaIcon,
   instagram: InstagramIcon,
   javascript: JavascriptIcon,
+  jest: JestIcon,
   js: JavascriptIcon,
   laravel: LaravelIcon,
   kubernetes: KubernetesIcon,
@@ -267,10 +313,16 @@ export const iconMap: Record<string, IconComponent> = {
   playwright: PlaywrightIcon,
   postgresql: PostgresqlIcon,
   postman: PostmanIcon,
+  pydantic: PydanticIcon,
+  puppeteer: PuppeteerIcon,
+  pytest: PytestIcon,
   python: PythonIcon,
   react: ReactIcon,
   redis: RedisIcon,
+  scrapy: ScrapyIcon,
+  selenium: SeleniumIcon,
   server: Server,
+  sqlalchemy: SqlalchemyIcon,
   sql: Database,
   swagger: SwaggerIcon,
   tailwind: TailwindIcon,

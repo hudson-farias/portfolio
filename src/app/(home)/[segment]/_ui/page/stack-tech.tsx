@@ -8,26 +8,17 @@ import { AppIcon } from "@/components/icons/app-icon"
 import { Reveal } from "../reveal"
 import { useSiteLocale } from "@/i18n/site-locale-provider"
 import { cn } from "@/lib/utils"
+import { FRAMEWORK_SCOPES, frameworkStackTechEmpty, siteFrameworkScopeLabel, type FrameworkScopeValue } from "@/lib/framework-scope"
 import type { Framework } from "@/types"
-
-type StackScope = "backend" | "frontend"
 
 const tileClassName =
   "surface surface-tile flex min-h-[100px] w-full flex-col items-center justify-center rounded-2xl p-4 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg"
 
-function SegmentedSwitch<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (value: T) => void
-}) {
+function SegmentedSwitch<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
   if (options.length === 0) return null
 
   return (
-    <div className="inline-flex rounded-full border border-border/60 bg-card/40 p-1">
+    <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-border/60 bg-card/40 p-1">
       {options.map((option) => (
         <button
           key={option.value}
@@ -50,12 +41,7 @@ function SegmentedSwitch<T extends string>({
 function FrameworkTile({ framework }: { framework: Framework }) {
   const { t } = useSiteLocale()
   const languageHint = framework.languages.map((language) => language.name).join(" · ")
-  const scope =
-    framework.scope === "backend"
-      ? t.common.backend
-      : framework.scope === "frontend"
-        ? t.common.frontend
-        : null
+  const scope = siteFrameworkScopeLabel(framework.scope ?? null, t.common)
   const title = [framework.name, scope, languageHint].filter(Boolean).join(" — ")
 
   return (
@@ -69,33 +55,18 @@ function FrameworkTile({ framework }: { framework: Framework }) {
   )
 }
 
-export function StackTech({
-  frameworks,
-  limit = 8,
-}: {
-  frameworks: Framework[]
-  limit?: number
-}) {
+export function StackTech({ frameworks, limit = 8 }: { frameworks: Framework[]; limit?: number }) {
   const { t, routes } = useSiteLocale()
-  const [scope, setScope] = useState<StackScope>("backend")
-
-  const hasBackend = useMemo(
-    () => frameworks.some((framework) => framework.scope === "backend"),
+  const availableScopes = useMemo(
+    () => FRAMEWORK_SCOPES.filter((scope) => frameworks.some((framework) => framework.scope === scope)),
     [frameworks],
   )
-
-  const hasFrontend = useMemo(
-    () => frameworks.some((framework) => framework.scope === "frontend"),
-    [frameworks],
-  )
+  const [scope, setScope] = useState<FrameworkScopeValue>(availableScopes[0] ?? "backend")
 
   const effectiveScope = useMemo(() => {
-    if (scope === "backend" && hasBackend) return "backend"
-    if (scope === "frontend" && hasFrontend) return "frontend"
-    if (hasBackend) return "backend"
-    if (hasFrontend) return "frontend"
-    return scope
-  }, [scope, hasBackend, hasFrontend])
+    if (availableScopes.includes(scope)) return scope
+    return availableScopes[0] ?? scope
+  }, [scope, availableScopes])
 
   const items = useMemo(
     () => frameworks.filter((framework) => framework.scope === effectiveScope),
@@ -105,16 +76,14 @@ export function StackTech({
   const visibleItems = items.slice(0, limit)
   const hasMore = items.length > limit
 
-  const scopeOptions = [
-    ...(hasBackend ? [{ value: "backend" as const, label: t.common.backend }] : []),
-    ...(hasFrontend ? [{ value: "frontend" as const, label: t.common.frontend }] : []),
-  ]
+  const scopeOptions = availableScopes.map((value) => ({
+    value,
+    label: siteFrameworkScopeLabel(value, t.common) ?? value,
+  }))
 
-  if (frameworks.length === 0) return null
-  if (!hasBackend && !hasFrontend) return null
+  if (frameworks.length === 0 || availableScopes.length === 0) return null
 
-  const emptyLabel =
-    effectiveScope === "backend" ? t.stackTech.emptyBackend : t.stackTech.emptyFrontend
+  const emptyLabel = frameworkStackTechEmpty(effectiveScope, t.stackTech)
 
   return (
     <section id="stack-tech" className="relative isolate z-0 scroll-mt-28 space-y-10">

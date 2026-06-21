@@ -1,3 +1,5 @@
+import type { FrameworkScopeValue } from "@/lib/framework-scope"
+
 export interface Skill {
   id: number
   name: string
@@ -50,7 +52,7 @@ export interface Framework {
   id: number
   name: string
   icon: string
-  scope?: "backend" | "frontend" | null
+  scope?: FrameworkScopeValue | null
   languages: LanguageRef[]
 }
 
