@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 
 import { API } from "@/api/server"
 import type { AdminProject } from "../interfaces"
+import type { AdminFramework } from "../../frameworks/interfaces"
 import { ProjectsNewPageClient } from "./page-client"
 import { emptyProjectForm } from "../projects-form-client"
 import { resolveTranslations } from "@/lib/admin/locale"
@@ -20,6 +21,7 @@ function projectFormFromGitHub(project: AdminProject) {
     image_url: "",
     live_url: project.homepage ?? "",
     repo_url: project.html_url,
+    framework_ids: [],
     translations: resolveTranslations(
       TRANSLATION_KEYS,
       { title: project.name, description: project.description ?? "" },
@@ -29,14 +31,20 @@ function projectFormFromGitHub(project: AdminProject) {
   }
 }
 
+async function loadFrameworks() {
+  const response = await API.get("/admin/frameworks")
+  return response.ok ? ((await response.json()) as AdminFramework[]) : []
+}
+
 export default async function ProjectsNewPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const external = params.external === "1"
   const gitIdParam = params.git_id
   const gitId = typeof gitIdParam === "string" ? Number(gitIdParam) : NaN
+  const frameworks = await loadFrameworks()
 
   if (external) {
-    return <ProjectsNewPageClient mode="create-external" initialForm={emptyProjectForm} />
+    return <ProjectsNewPageClient mode="create-external" initialForm={emptyProjectForm} frameworks={frameworks} />
   }
 
   if (!Number.isFinite(gitId)) {
@@ -55,6 +63,7 @@ export default async function ProjectsNewPage({ searchParams }: { searchParams: 
       mode="create-github"
       gitId={gitId}
       initialForm={projectFormFromGitHub(project)}
+      frameworks={frameworks}
     />
   )
 }

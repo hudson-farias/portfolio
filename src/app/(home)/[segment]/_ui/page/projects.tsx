@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { Reveal } from "../reveal"
+import { FrameworkBadges } from "../framework-badges"
 import { AppIcon } from "@/components/icons/app-icon"
 import { Button } from "@/components/ui/button"
 import { SectionCta } from "../section-cta"
@@ -50,6 +51,11 @@ function ProjectCard({
           <p className="line-clamp-4 text-sm leading-relaxed text-muted-foreground">
             {project.description || t.common.noDescription}
           </p>
+          {project.frameworks?.length ? (
+            <div className="pt-2">
+              <FrameworkBadges frameworks={project.frameworks} />
+            </div>
+          ) : null}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3 sm:mt-6">
@@ -220,8 +226,8 @@ export const Projects = ({
         {!embedded ? heading : null}
 
         <div className="mx-auto grid w-full max-w-4xl gap-4 md:grid-cols-2">
-          {visibleProjects.map((project, index) => (
-            <Reveal key={project.id} variant="scale" delay={80 + index * 60}>
+            {visibleProjects.map((project, index) => (
+              <Reveal key={`${project.id}-${index}`} variant="scale" delay={80 + index * 60}>
               <ProjectCard project={project} />
             </Reveal>
           ))}
@@ -271,9 +277,9 @@ export const Projects = ({
           aria-label="Carrossel de projetos"
         >
           <div className="flex w-max gap-4 pr-8 snap-x snap-mandatory">
-            {visibleProjects.map((project) => (
+            {visibleProjects.map((project, index) => (
               <ProjectCard
-                key={project.id}
+                key={`${project.id}-${index}`}
                 project={project}
                 cardWidth={cardWidth}
                 className="flex-none snap-start"

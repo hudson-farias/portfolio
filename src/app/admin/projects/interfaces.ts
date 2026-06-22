@@ -1,4 +1,5 @@
 import type { LocaleCode, Translations } from "@/lib/admin/locale"
+import type { FrameworkRef } from "../experiences/interfaces"
 
 export interface ProjectTranslationFields {
   title: string
@@ -23,6 +24,8 @@ export interface AdminProject {
   archived?: boolean
   fork?: boolean
   external?: boolean
+  framework_ids?: number[]
+  frameworks?: FrameworkRef[]
   translations?: Translations<ProjectTranslationFields>
 }
 
@@ -35,6 +38,7 @@ export interface ProjectForm {
   image_url: string
   live_url: string
   repo_url: string
+  framework_ids: number[]
   translations: Record<LocaleCode, ProjectTranslationFields>
 }
 

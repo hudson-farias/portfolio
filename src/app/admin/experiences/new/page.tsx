@@ -1,5 +1,6 @@
 import { API } from "@/api/server"
 import type { AdminRole } from "../../roles/interfaces"
+import type { AdminFramework } from "../../frameworks/interfaces"
 import type { ExperienceRole } from "../interfaces"
 import { ExperiencesNewPageClient } from "./page-client"
 
@@ -10,8 +11,12 @@ function rolesForForm(roles: AdminRole[]): ExperienceRole[] {
 }
 
 export default async function ExperiencesNewPage() {
-  const response = await API.get("/admin/roles")
-  const roles = response.ok ? rolesForForm(await response.json()) : []
+  const [rolesRes, frameworksRes] = await Promise.all([
+    API.get("/admin/roles"),
+    API.get("/admin/frameworks"),
+  ])
+  const roles = rolesRes.ok ? rolesForForm(await rolesRes.json()) : []
+  const frameworks: AdminFramework[] = frameworksRes.ok ? await frameworksRes.json() : []
 
-  return <ExperiencesNewPageClient roles={roles} />
+  return <ExperiencesNewPageClient roles={roles} frameworks={frameworks} />
 }

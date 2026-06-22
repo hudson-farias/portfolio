@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation"
 
 import { API } from "@/api/client"
 import type { ProjectForm, ProjectTranslationFields } from "./interfaces"
+import type { AdminFramework } from "../frameworks/interfaces"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
+import { FrameworkPicker } from "../components/framework-picker"
 import { FormPageLayout } from "../components/form-page-layout"
 import { Field, TextArea, TextInput } from "../components/form-fields"
 import { LocaleTabs } from "../components/locale-tabs"
@@ -25,6 +27,7 @@ export const emptyProjectForm: ProjectForm = {
   image_url: "",
   live_url: "",
   repo_url: "",
+  framework_ids: [],
   translations: emptyTranslations(emptyProjectTranslationFields),
 }
 
@@ -46,7 +49,7 @@ function formTitle(mode: ProjectsFormMode, gitId?: number) {
   return "Editar projeto"
 }
 
-export const ProjectsFormClient = ({ mode, gitId, initialForm }: { mode: ProjectsFormMode; gitId?: number; initialForm: ProjectForm }) => {
+export const ProjectsFormClient = ({ mode, gitId, initialForm, frameworks }: { mode: ProjectsFormMode; gitId?: number; initialForm: ProjectForm; frameworks: AdminFramework[] }) => {
   const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
   const [submitting, setSubmitting] = useState(false)
@@ -55,6 +58,15 @@ export const ProjectsFormClient = ({ mode, gitId, initialForm }: { mode: Project
 
   const showRepoUrlInput = mode === "create-external" || (mode === "edit" && gitId !== undefined && gitId < 0)
   const isCreate = mode === "create-github" || mode === "create-external"
+
+  function toggleFramework(frameworkId: number) {
+    setForm((current) => ({
+      ...current,
+      framework_ids: current.framework_ids.includes(frameworkId)
+        ? current.framework_ids.filter((id) => id !== frameworkId)
+        : [...current.framework_ids, frameworkId],
+    }))
+  }
 
   function setTranslationField(key: keyof ProjectTranslationFields, value: string) {
     setForm((current) => ({
@@ -163,6 +175,14 @@ export const ProjectsFormClient = ({ mode, gitId, initialForm }: { mode: Project
             />
           </Field>
         )}
+        <Field label="Frameworks vinculados">
+          <FrameworkPicker
+            frameworks={frameworks}
+            selectedIds={form.framework_ids}
+            disabled={!canMutate}
+            onToggle={toggleFramework}
+          />
+        </Field>
       </FormPageLayout>
     </>
   )

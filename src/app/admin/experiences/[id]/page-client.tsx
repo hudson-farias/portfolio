@@ -1,6 +1,7 @@
 "use client"
 
 import type { AdminExperience, ExperienceForm, ExperienceRole, ExperienceTranslationFields } from "../interfaces"
+import type { AdminFramework } from "../../frameworks/interfaces"
 import { ExperiencesFormClient } from "../experiences-form-client"
 import { resolveTranslations } from "@/lib/admin/locale"
 
@@ -17,6 +18,7 @@ function experienceToForm(item: AdminExperience): ExperienceForm {
     contract_type: item.contract_type ?? "",
     live_url: item.live_url ?? "",
     hidden: item.hidden ?? false,
+    framework_ids: item.framework_ids ?? item.frameworks?.map((framework) => framework.id) ?? [],
     translations: resolveTranslations(
       TRANSLATION_KEYS,
       item.translations?.pt ?? {},
@@ -26,13 +28,14 @@ function experienceToForm(item: AdminExperience): ExperienceForm {
   }
 }
 
-export const ExperiencesEditPageClient = ({ experience, roles }: { experience: AdminExperience; roles: ExperienceRole[] }) => {
+export const ExperiencesEditPageClient = ({ experience, roles, frameworks }: { experience: AdminExperience; roles: ExperienceRole[]; frameworks: AdminFramework[] }) => {
   return (
     <ExperiencesFormClient
       mode="edit"
       experienceId={experience.id}
       initialForm={experienceToForm(experience)}
       roles={roles}
+      frameworks={frameworks}
     />
   )
 }

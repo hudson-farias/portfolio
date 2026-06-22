@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react"
 
 import { Reveal } from "../reveal"
+import { FrameworkBadges } from "../framework-badges"
 import { SanitizedHtml } from "@/components/sanitized-html"
 import { SectionCta } from "../section-cta"
 import { useSiteLocale } from "@/i18n/site-locale-provider"
@@ -97,6 +98,11 @@ export const Experiences = ({
                 html={experience.description}
                 className="mt-4 space-y-2 text-sm leading-relaxed text-muted-foreground"
               />
+              {experience.frameworks?.length ? (
+                <div className="mt-4">
+                  <FrameworkBadges frameworks={experience.frameworks} />
+                </div>
+              ) : null}
             </article>
           </Reveal>
           )

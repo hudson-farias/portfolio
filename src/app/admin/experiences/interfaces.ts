@@ -1,5 +1,12 @@
 import type { ContractType } from "@/types"
 import type { LocaleCode, Translations } from "@/lib/admin/locale"
+import type { AdminFramework } from "../frameworks/interfaces"
+
+export interface FrameworkRef {
+  id: number
+  name: string
+  icon: string
+}
 
 export interface ExperienceTranslationFields {
   period: string
@@ -16,6 +23,8 @@ export interface AdminExperience {
   description: string
   live_url?: string | null
   hidden?: boolean
+  framework_ids?: number[]
+  frameworks?: FrameworkRef[]
   translations?: Translations<ExperienceTranslationFields>
 }
 
@@ -38,6 +47,7 @@ export interface ExperienceForm {
   contract_type: string
   live_url: string
   hidden: boolean
+  framework_ids: number[]
   translations: Record<LocaleCode, ExperienceTranslationFields>
 }
 

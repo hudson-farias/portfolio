@@ -17,6 +17,7 @@ export interface Experience {
   description: string
   live_url?: string | null
   hidden?: boolean
+  frameworks?: FrameworkRef[]
 }
 
 export interface Project {
@@ -27,6 +28,7 @@ export interface Project {
   homepage?: string | null
   html_url?: string | null
   isPublic?: boolean
+  frameworks?: FrameworkRef[]
 }
 
 export interface SocialNetwork {
@@ -46,6 +48,13 @@ export interface LanguageRef {
   id: number
   name: string
   icon: string
+}
+
+export interface FrameworkRef {
+  id: number
+  name: string
+  icon: string
+  languages: LanguageRef[]
 }
 
 export interface Framework {

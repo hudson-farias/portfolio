@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation"
 
 import { API } from "@/api/client"
 import type { ContractType, ContractTypeOption, ExperienceForm, ExperienceRole, ExperienceTranslationFields } from "./interfaces"
+import type { AdminFramework } from "../frameworks/interfaces"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
+import { FrameworkPicker } from "../components/framework-picker"
 import { FormPageLayout } from "../components/form-page-layout"
 import { CheckboxField, Field, SelectInput, TextArea, TextInput } from "../components/form-fields"
 import { LocaleTabs } from "../components/locale-tabs"
@@ -32,6 +34,7 @@ export function emptyExperienceForm(defaultRoleId = ""): ExperienceForm {
     contract_type: "",
     live_url: "",
     hidden: false,
+    framework_ids: [],
     translations: emptyTranslations(emptyExperienceTranslationFields),
   }
 }
@@ -47,12 +50,21 @@ function buildPayload(form: ExperienceForm) {
   }
 }
 
-export const ExperiencesFormClient = ({ mode, experienceId, initialForm, roles }: { mode: "create" | "edit"; experienceId?: number; initialForm: ExperienceForm; roles: ExperienceRole[] }) => {
+export const ExperiencesFormClient = ({ mode, experienceId, initialForm, roles, frameworks }: { mode: "create" | "edit"; experienceId?: number; initialForm: ExperienceForm; roles: ExperienceRole[]; frameworks: AdminFramework[] }) => {
   const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
   const [submitting, setSubmitting] = useState(false)
   const [activeLocale, setActiveLocale] = useState<LocaleCode>("pt")
   const [form, setForm] = useState(initialForm)
+
+  function toggleFramework(frameworkId: number) {
+    setForm((current) => ({
+      ...current,
+      framework_ids: current.framework_ids.includes(frameworkId)
+        ? current.framework_ids.filter((id) => id !== frameworkId)
+        : [...current.framework_ids, frameworkId],
+    }))
+  }
 
   function setTranslationField(key: keyof ExperienceTranslationFields, value: string) {
     setForm((current) => ({
@@ -180,6 +192,14 @@ export const ExperiencesFormClient = ({ mode, experienceId, initialForm, roles }
             placeholder="https://..."
             value={form.live_url}
             onChange={(e) => setForm((f) => ({ ...f, live_url: e.target.value }))}
+          />
+        </Field>
+        <Field label="Frameworks vinculados">
+          <FrameworkPicker
+            frameworks={frameworks}
+            selectedIds={form.framework_ids}
+            disabled={!canMutate}
+            onToggle={toggleFramework}
           />
         </Field>
         <CheckboxField
