@@ -1,15 +1,11 @@
-const AUTH_COOKIE = 'ACCESS_TOKEN_ADMIN'
-
 type SearchParams = Record<string, string | string[] | undefined>
 
+const apiBaseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+const authBaseURL = (process.env.NEXT_PUBLIC_AUTH_URL || '').replace(/\/$/, '')
+
 class ApiClient {
-  private baseURL: string
-
-  public loginUrl: string
-
-  constructor() {
-    this.baseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
-    this.loginUrl = `${this.baseURL}/auth/discord/redirect`
+  get loginUrl() {
+    return `${authBaseURL}/discord/redirect`
   }
 
   private headers(method: string, isForm: boolean = false): Record<string, string> {
@@ -42,7 +38,7 @@ class ApiClient {
     const headers = this.headers(method, isForm)
     const payload = isForm ? body : body !== undefined ? JSON.stringify(body) : undefined
 
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    const response = await fetch(`${apiBaseURL}${endpoint}`, {
       method,
       headers,
       body: payload,
@@ -53,8 +49,17 @@ class ApiClient {
   }
 
   async checkAuth(): Promise<boolean> {
-    const response = await this.get('/auth/verify')
+    const response = await fetch(`${authBaseURL}/auth/verify`, {
+      credentials: 'include',
+      cache: 'no-store',
+    })
+
     return response.status === 204
+  }
+
+  logout(redirect: string = '/admin'): void {
+    const target = new URL(redirect, window.location.origin).toString()
+    window.location.href = `${authBaseURL}/auth/logout?redirect=${encodeURIComponent(target)}`
   }
 
   get(endpoint: string, query?: string | SearchParams): Promise<Response> {
@@ -76,12 +81,6 @@ class ApiClient {
   delete(endpoint: string): Promise<Response> {
     return this.request('DELETE', endpoint)
   }
-
-  logout(redirect: string = '/admin'): void {
-    const target = new URL(redirect, window.location.origin).toString()
-    window.location.href = `${this.baseURL}/auth/logout?redirect=${encodeURIComponent(target)}`
-  }
 }
 
 export const API = new ApiClient()
-export { AUTH_COOKIE }

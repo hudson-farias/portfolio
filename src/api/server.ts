@@ -1,16 +1,13 @@
 import { cookies } from 'next/headers'
 
-import { AUTH_COOKIE } from './client'
-
 type SearchParams = Record<string, string | string[] | undefined>
 
+const AUTH_COOKIE = 'ACCESS_TOKEN_ADMIN'
+
+const apiBaseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
+const authBaseURL = (process.env.NEXT_PUBLIC_AUTH_URL || '').replace(/\/$/, '')
+
 class ApiServer {
-  private baseURL: string
-
-  constructor() {
-    this.baseURL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
-  }
-
   private async authHeaders(): Promise<Record<string, string>> {
     const cookieStore = await cookies()
     const token = cookieStore.get(AUTH_COOKIE)?.value
@@ -44,7 +41,7 @@ class ApiServer {
       headers['Content-Type'] = 'application/json'
     }
 
-    return fetch(`${this.baseURL}${endpoint}`, {
+    return fetch(`${apiBaseURL}${endpoint}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -57,11 +54,6 @@ class ApiServer {
     return this.request('GET', this.withQuery(endpoint, query))
   }
 
-  async checkAuth(): Promise<boolean> {
-    const response = await this.get('/auth/verify')
-    return response.status === 204
-  }
-
   post(endpoint: string, body: unknown): Promise<Response> {
     return this.request('POST', endpoint, body)
   }
@@ -72,6 +64,17 @@ class ApiServer {
 
   delete(endpoint: string): Promise<Response> {
     return this.request('DELETE', endpoint)
+  }
+
+  async checkAuth(): Promise<boolean> {
+    const headers = await this.authHeaders()
+    const response = await fetch(`${authBaseURL}/auth/verify`, {
+      headers,
+      cache: 'no-store',
+      credentials: 'include',
+    })
+
+    return response.status === 204
   }
 }
 

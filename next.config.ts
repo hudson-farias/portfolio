@@ -1,7 +1,10 @@
 import type { NextConfig } from "next"
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || ""
+const authUrl = process.env.NEXT_PUBLIC_AUTH_URL || ""
 const apiOrigin = apiUrl ? new URL(apiUrl).origin : ""
+const authOrigin = authUrl ? new URL(authUrl).origin : ""
+const connectOrigins = [apiOrigin, authOrigin].filter(Boolean).join(" ")
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -9,7 +12,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${apiOrigin}`.trim(),
+  `connect-src 'self' ${connectOrigins}`.trim(),
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
