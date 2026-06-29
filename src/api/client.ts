@@ -59,7 +59,7 @@ class ApiClient {
 
   logout(redirect: string = '/admin'): void {
     const target = new URL(redirect, window.location.origin).toString()
-    window.location.href = `${authBaseURL}/auth/logout?redirect=${encodeURIComponent(target)}`
+    window.location.href = `${authBaseURL}/logout?redirect=${encodeURIComponent(target)}`
   }
 
   get(endpoint: string, query?: string | SearchParams): Promise<Response> {
