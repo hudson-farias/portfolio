@@ -49,7 +49,7 @@ class ApiClient {
   }
 
   async checkAuth(): Promise<boolean> {
-    const response = await fetch(`${authBaseURL}/auth/verify`, {
+    const response = await fetch(`${authBaseURL}/verify`, {
       credentials: 'include',
       cache: 'no-store',
     })
