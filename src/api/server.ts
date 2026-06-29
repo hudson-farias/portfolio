@@ -68,7 +68,7 @@ class ApiServer {
 
   async checkAuth(): Promise<boolean> {
     const headers = await this.authHeaders()
-    const response = await fetch(`${authBaseURL}/auth/verify`, {
+    const response = await fetch(`${authBaseURL}/verify`, {
       headers,
       cache: 'no-store',
       credentials: 'include',
