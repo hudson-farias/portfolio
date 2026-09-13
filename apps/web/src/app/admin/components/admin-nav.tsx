@@ -3,12 +3,14 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { BadgeCheck, Boxes, Briefcase, Database, FolderGit2, KeyRound, Languages, Layers, LayoutDashboard, Share2, User, Wrench } from "lucide-react"
+import { BadgeCheck, Boxes, Briefcase, Database, FolderGit2, KeyRound, Languages, Layers, LayoutDashboard, Share2, User, Wrench, type LucideIcon } from "lucide-react"
 
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { cn } from "@/lib/utils"
 
-const links = [
+type NavItem = { href: string; label: string; icon: LucideIcon; exact?: boolean }
+
+const links: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/profile", label: "Perfil", icon: User },
   { href: "/admin/experiences", label: "Experiências", icon: Briefcase },
@@ -22,7 +24,7 @@ const links = [
   { href: "/admin/social-networks", label: "Redes sociais", icon: Share2 },
 ]
 
-const apiKeysLink = { href: "/admin/api-keys", label: "Chaves de acesso", icon: KeyRound }
+const apiKeysLink: NavItem = { href: "/admin/api-keys", label: "Chaves de acesso", icon: KeyRound }
 
 export function AdminNav() {
   const pathname = usePathname()
