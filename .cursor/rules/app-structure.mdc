@@ -1,0 +1,288 @@
+---
+description: App Router, API, fetch, navegação e estilo (apps/web)
+globs: "**/src/**/*.{tsx,ts}"
+alwaysApply: false
+---
+
+# Frontend — apps/web
+
+Site Next.js em `apps/web` do repositório `portfolio-api`. O OAuth continua no repo `portfolio-auth`. Regras aqui valem só para o frontend.
+
+## Estrutura App Router
+
+### Client Components por rota
+
+Coloque `"use client"` nos arquivos colados à rota, não em `components/` genérico da rota:
+
+| Arquivo | Uso |
+|---------|-----|
+| `page.tsx` | Server Component — fetch, auth, passa props |
+| `page-client.tsx` | UI interativa da página (`AdminPageClient`, etc.) |
+| `layout.tsx` | Server Component — dados do layout, slots server |
+| `layout-client.tsx` | Shell client do layout (sidebar, providers) |
+
+```tsx
+// page.tsx — servidor
+import { AdminPageClient } from "./page-client"
+
+export default async function AdminPage() {
+  const data = await loadData()
+  return <AdminPageClient data={data} />
+}
+```
+
+```tsx
+// layout.tsx — servidor passa slot server para o client
+import { AdminLayoutClient } from "./layout-client"
+import { AdminAuthPanel } from "./auth-panel"
+
+export default async function AdminLayout({ children }) {
+  return (
+    <AdminLayoutClient authPanel={<AdminAuthPanel ... />}>
+      {children}
+    </AdminLayoutClient>
+  )
+}
+```
+
+### Pasta `components/` na rota
+
+Use `app/[rota]/components/` **somente** quando:
+
+- o mesmo componente é reutilizado em **várias** páginas daquela rota;
+- é um bloco compartilhado claramente separado (ex.: modal complexo usado em 2+ arquivos).
+
+Prefira arquivos colados à rota para o resto:
+
+- `auth-panel.tsx` — Server Component auxiliar do layout
+- `page-client.tsx` / `layout-client.tsx` — client da rota
+
+### `src/components/`
+
+Reservado a UI **global** do projeto (`ui/button`, etc.), não a telas de uma rota específica.
+
+### Landpage — `app/(home)/`
+
+Estrutura i18n com rotas finas + server components compartilhados:
+
+```
+app/(home)/
+  page.tsx             → redirect / → /pt
+  layout.tsx           → pass-through ({children})
+  [segment]/
+    layout.tsx           → SiteLayout + JsonLd + metadata
+    layout.interfaces.ts → tipos do layout/metadata API
+    metadata.ts          → generateLandpageMetadata
+    interfaces.ts        → tipos da home (`page.tsx`)
+    page.tsx
+    contact/page.tsx + contact/interfaces.ts
+    …
+  _ui/                   → blocos visuais reutilizáveis
+```
+
+| Arquivo | Tipos |
+|---------|-------|
+| `[segment]/interfaces.ts` | home (`PageResponse`, `HeroProfile`, …) |
+| `[segment]/layout.interfaces.ts` | layout global (`LayoutResponse`, `FooterResponse`, …) |
+| `[segment]/*/interfaces.ts` | resposta da API daquela página |
+
+Pastas com prefixo `_` são [private folders](https://nextjs.org/docs/app/building-your-application/routing/colocation#private-folders) — não geram segmento de URL.
+
+### Evitar (estrutura)
+
+- `components/foo-client.tsx` como substituto de `page-client.tsx`
+- `"use client"` em `page.tsx` ou `layout.tsx` sem necessidade
+- duplicar client boundary em vários arquivos pequenos na mesma rota
+
+## API e fetch
+
+### Classe `API`
+
+`src/api/client.ts` e `src/api/server.ts` são **wrappers de `fetch`** (URL base, headers, cookies). Não adicionar `getJson`, parse automático nem `try/catch` na classe.
+
+### Server Components (page, layout, metadata)
+
+Server alimenta client via props. Padrão direto:
+
+```tsx
+const response = await API.get("/landpage/page")
+if (!response.ok) {
+  // fallback explícito ou deixar falhar — conforme o caso
+}
+const data = await response.json()
+```
+
+- Validar **`response.ok`** para 4xx/5xx — não usar `try/catch` só para isso.
+- `fetch` não lança em HTTP error; sem `response.ok`, erro passa silencioso.
+- `try/catch` só se houver tratamento real de exceção (ex.: client admin com toast), não como substituto de `!response.ok`.
+
+### Metadata com fallback
+
+Quando SEO pode degradar sem derrubar a rota:
+
+```tsx
+const fallback: Metadata = { title: "Portfólio", description: "..." }
+const response = await API.get("/landpage/metadata")
+if (!response.ok) return fallback
+const metadata = await response.json()
+```
+
+### Rotas da API por contexto Next
+
+Uma rota por contexto de render — não várias chamadas na mesma `page.tsx`:
+
+| Contexto | Rota |
+|----------|------|
+| `generateMetadata` | `/landpage/metadata` |
+| `layout` | `/landpage/layout` |
+| `page` (home) | `/landpage/page` |
+
+Nova rota só quando page e layout não compartilham o mesmo payload.
+
+### Evitar (API)
+
+```tsx
+// ❌ try/catch genérico mascarando 404/500
+try {
+  const response = await API.get("/x")
+  const data = await response.json()
+} catch {
+  return fallback
+}
+
+// ❌ assumir sucesso sem checar status
+const data = await (await API.get("/x")).json()
+
+// ❌ várias rotas na mesma page
+const [hero, about, skills] = await Promise.all([...])
+```
+
+## Navegação
+
+### Link (rotas internas)
+
+Para rotas internas do app, use sempre `import Link from "next/link"`.
+
+- Rotas internas (`/`, `/admin`, etc.): `<Link href="...">`, nunca `<a href="...">`.
+- Links externos (`https://`, `mailto:`, `tel:`) e âncoras na mesma página (`#hero`): `<a href="...">` com `target`/`rel` quando fizer sentido.
+
+```tsx
+// ❌ BAD
+<a href="/admin">Admin</a>
+
+// ✅ GOOD
+import Link from "next/link"
+<Link href="/admin">Admin</Link>
+
+// ✅ OK — externo ou âncora
+<a href="#contact">Contato</a>
+<a href="https://github.com/usuario" target="_blank" rel="noopener noreferrer">GitHub</a>
+```
+
+### Redirecionamento sem JavaScript
+
+Prefira navegação declarativa ou redirecionamento no servidor.
+
+**Preferir (em ordem):** `Link` → `<a href>` (externo/OAuth) → `redirect()` de `next/navigation` no servidor.
+
+**Evitar:** `window.location`, `router.push`/`replace` só para trocar de página, `onClick` que apenas redireciona.
+
+**JS aceitável:** `router.refresh()`, destino após lógica assíncrona (URL da API), fluxos com `preventDefault`.
+
+```tsx
+// ❌ BAD
+<Button onClick={() => { window.location.href = "/admin" }}>Admin</Button>
+
+// ✅ GOOD
+<Button asChild>
+  <Link href="/admin">Admin</Link>
+</Button>
+
+<Button asChild>
+  <a href={discordLoginUrl}>Entrar</a>
+</Button>
+```
+
+## Estilo de componentes
+
+Vale para `src/components/**`, `app/**/components/**`, `*-client.tsx` e arquivos de UI de rota (`auth-panel.tsx`, etc.).
+
+Respeite `preserve-vscode-edits.mdc`: aplique este estilo só em código novo ou quando o usuário pedir explicitamente.
+
+### Arrow functions
+
+Componentes React devem ser **arrow functions** (`const` + `=>`), não `function`.
+
+```tsx
+// ❌ BAD
+export function Header() {
+  return <header />
+}
+
+// ✅ GOOD
+export const Header = () => {
+  return <header />
+}
+```
+
+Exceção aceitável: `export default async function Page()` em `page.tsx` / `layout.tsx` (rotas Next).
+
+### Assinaturas de funções
+
+Manter **todos os parâmetros na mesma linha** — sem quebra nos params, inclusive tipo inline de props.
+
+```tsx
+// ❌ EVITAR
+export default async function SkillsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+
+// ✅ OK
+export default async function SkillsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+```
+
+Vale para componentes, handlers e funções utilitárias.
+
+### Imports em uma linha
+
+Cada `import` deve ocupar **uma única linha**, sem quebra.
+
+```tsx
+// ❌ BAD
+import {
+  Button,
+} from "@/components/ui/button"
+
+// ✅ GOOD
+import { Button } from "@/components/ui/button"
+import type { PortfolioData } from "@/lib/types"
+```
+
+Ordem sugerida: pacotes externos → aliases `@/...` → `import type`.
+
+### Fetch e erros — sem `try/catch` desnecessário
+
+Não envolver fetch/API em `try/catch` só para tratar HTTP. Use `response.ok` e trate o corpo de erro quando `!response.ok`.
+
+`try/catch` só quando realmente necessário (ex.: `JSON.parse` de dado não confiável, `new URL()` com input inválido).
+
+```ts
+// ❌ EVITAR
+try {
+  const response = await API.post("/admin/roles", payload)
+  if (!response.ok) { ... }
+} catch {
+  toast.error("Erro inesperado")
+}
+
+// ✅ OK
+const response = await API.post("/admin/roles", payload)
+if (!response.ok) {
+  adminToast.error(await extractErrorMessage(response))
+  return null
+}
+```
+
+Padrão do admin: `adminMutation` em `src/lib/admin/admin-toast.ts`.

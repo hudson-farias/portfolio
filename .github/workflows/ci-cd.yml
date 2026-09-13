@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "apps/backend/**"
+      - "infrastructure/**"
+      - ".github/workflows/ci-cd.yml"
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -20,5 +25,18 @@ jobs:
 
       - name: Connect, pull and re-build
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-          'cd portfolio/portfolio-api && git pull && nohup docker-compose up -d --build --remove-orphans > deploy.log 2>&1 & disown'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' <<'EOF'
+          set -euo pipefail
+          cd portfolio/portfolio-api
+          git pull
+          if [ -f .env ] && [ ! -f apps/backend/.env ]; then
+            mv .env apps/backend/.env
+          fi
+          if docker compose version >/dev/null 2>&1; then
+            COMPOSE=(docker compose)
+          else
+            COMPOSE=(docker-compose)
+          fi
+          nohup "${COMPOSE[@]}" -p portfolio-api --env-file apps/backend/.env -f infrastructure/docker-compose.yml up -d --build --remove-orphans > deploy.log 2>&1 &
+          disown || true
+          EOF

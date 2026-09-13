@@ -1,0 +1,25 @@
+---
+description: Não alterar código editado pelo usuário no VS Code
+alwaysApply: true
+---
+
+# Preservar edições do VS Code
+
+O usuário edita partes do projeto no **VS Code**. O agente do Cursor **não deve sobrescrever** esse trabalho.
+
+## Obrigatório
+
+- **Não reformatar** arquivos só para seguir convenções (arrow functions, imports em uma linha, indentação, etc.) se o usuário não pediu naquele arquivo.
+- **Não reescrever** arquivos inteiros quando um diff mínimo resolve a tarefa.
+- Antes de mudar um arquivo que o usuário pode ter editado fora do Cursor, **ler o conteúdo atual** e alterar **apenas** o necessário para a solicitação.
+- Se a tarefa pedir estilo/convenção em arquivo já existente, **perguntar** ou limitar-se a **arquivos novos**, salvo pedido explícito para refatorar aquele arquivo.
+
+## Permitido
+
+- Criar arquivos novos seguindo as regras do projeto.
+- Editar trechos pontuais pedidos pelo usuário (bug, feature, integração).
+- Aplicar `app-structure.mdc` **somente** quando o usuário pedir alinhamento ou em código que você acabou de criar.
+
+## Em dúvida
+
+Preservar o código do usuário. Preferir perguntar em vez de “melhorar” estilo por conta própria.

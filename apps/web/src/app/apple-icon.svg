@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" fill="none">
+  <style>
+    .h {
+      fill: oklch(0.32 0.01 260);
+    }
+    .accent {
+      fill: oklch(0.38 0.015 260);
+    }
+    @media (prefers-color-scheme: dark) {
+      .h {
+        fill: oklch(0.98 0.01 255);
+      }
+      .accent {
+        fill: oklch(0.68 0.2 258);
+      }
+    }
+  </style>
+  <text class="accent" x="4" y="44" font-size="20" font-weight="700" font-family="system-ui, sans-serif">&lt;</text>
+  <text class="h" x="16" y="44" font-size="20" font-weight="700" font-family="system-ui, sans-serif">H</text>
+  <text class="accent" x="30" y="44" font-size="20" font-weight="700" font-family="system-ui, sans-serif">F</text>
+  <text class="accent" x="44" y="44" font-size="20" font-weight="700" font-family="system-ui, sans-serif">/</text>
+  <text class="accent" x="52" y="44" font-size="20" font-weight="700" font-family="system-ui, sans-serif">&gt;</text>
+</svg>

@@ -4,7 +4,9 @@ globs: "**/*.py"
 alwaysApply: true
 ---
 
-# Python — portfolio-api
+# Python — apps/backend
+
+Código da API em `apps/backend/`. **Não alterar** `apps/backend/database/__init__.py` sem permissão explícita.
 
 ## Type hints
 

@@ -1,67 +1,81 @@
-# Portfolio API
+# Portfolio
 
-Backend que alimenta meu portfólio. Centralizo aqui perfil, experiências, habilidades, projetos e redes sociais em uma API REST — separando conteúdo da apresentação visual para poder atualizar o site sem mexer no frontend.
+Site e API do portfólio, no mesmo repositório. O login OAuth continua no `portfolio-auth` (repo separado).
 
-## O que é
+Sem `shared/`, sem npm workspaces. Frontend e API falam só via HTTP.
 
-Construí uma API em FastAPI que atende dois públicos: visitantes da landing page, que recebem apenas dados públicos; e eu, que gerencio tudo por um painel admin com autenticação restrita.
+## Estrutura
 
-O conteúdo vive no PostgreSQL. Sincronizo projetos com o GitHub — só entram no portfólio os repositórios que escolho manualmente. Repositórios privados ficam ocultos para quem não está autenticado.
+```
+apps/web         # Next.js (host em dev, :3000) — Vercel em produção
+apps/backend     # FastAPI + Alembic (host em dev, :8000)
+infrastructure/  # Compose: Postgres local + API/Postgres na VPS
+scripts/         # Bootstrap do Postgres local
+```
 
-## Endpoints públicos
+O `portfolio-auth` fica fora deste repo.
 
-Rotas que alimentam o site, sem necessidade de login:
+## Desenvolvimento local
 
-- **Hero** — meu nome, cargos, localização, disponibilidade e redes do header
-- **About** — texto estendido e estatísticas da minha carreira
-- **Skills** — categorias e habilidades que cadastrei
-- **Experiences** — meu histórico profissional (registros não ocultos)
-- **Projects** — repositórios públicos que selecionei no GitHub
-- **Contact** — meu e-mail e canais de contato
-- **Curriculum** — geração de PDF do meu currículo a partir dos dados do banco
+Apps no **host**; **só o PostgreSQL** em container.
 
-## Painel admin
+### Pré-requisitos
 
-Área protegida onde só eu (ou quem autorizei) pode editar:
+- Docker + Docker Compose (apenas para o Postgres)
+- Python 3.12+ (asdf: `.tool-versions`) + venv do backend
+- Node.js 20+ e pnpm
+- `portfolio-auth` rodando à parte, se for usar o admin
 
-- **Dashboard** — visão geral com contadores e prévias de cada seção
-- **Experiências** — crio, edito, oculto e removo registros
-- **Skills** — gerencio categorias e habilidades com ícones
-- **Projetos** — escolho quais repositórios do GitHub aparecem no site
-- **Redes sociais** — configuro os links exibidos no header e no footer
+### Bootstrap
 
-Visitantes não autenticados ainda podem acessar o dashboard em modo leitura, mas veem apenas dados públicos — sem projetos privados nem experiências ocultas.
+```bash
+# Use um .env local (127.0.0.1:5433). Não aponte o bootstrap para o Postgres da VPS.
+cp apps/backend/.env.example apps/backend/.env
+# POSTGRES_HOST=127.0.0.1  POSTGRES_PORT=5433
+# AUTH_SERVICE_URL=http://127.0.0.1:8001/api
 
-## Autenticação
+./scripts/dev-bootstrap.sh
 
-Implementei login via **OAuth do Discord**. Apenas e-mails que autorizei recebem um JWT para editar conteúdo. Valido tokens em cada requisição sensível; sem credencial válida, a API responde apenas com o que é público.
+cd apps/backend && source venv/bin/activate
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-## Integrações
+cd apps/web && cp .env.example .env && pnpm install && pnpm dev
+```
 
-| Serviço | Como uso |
-|---------|----------|
-| **GitHub** | Listo meus repositórios (públicos ou privados, conforme autenticação) e exponho nome, descrição, URL e homepage |
-| **Discord** | Fluxo OAuth para me identificar como dono do portfólio |
-| **PostgreSQL** | Persisto experiências, skills, projetos selecionados e redes sociais |
-| **Redis** | Faço cache das respostas do GitHub e sessões auxiliares |
+| Peça | Como sobe | URL |
+|------|-----------|-----|
+| PostgreSQL | `./scripts/dev-db.sh up` | `127.0.0.1:5433` |
+| API | `uvicorn` no host | http://localhost:8000/docs |
+| Web | `pnpm dev` | http://localhost:3000 |
+| Auth | repo `portfolio-auth` | http://localhost:8001 |
 
-## Arquitetura
+No `.env` do site:
 
-- **Routers** — organizei rotas por domínio (`landpage`, `admin`, `auth`)
-- **Facades** — monto as respostas públicas a partir do banco e das integrações
-- **ORM** — camada de acesso ao PostgreSQL com SQLAlchemy
-- **Generators** — gero o currículo em PDF com ReportLab
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_AUTH_URL=http://localhost:8001/api
+```
 
-Novos módulos em `routers/` são registrados automaticamente, sem precisar alterar o `main.py`.
+Comandos do banco:
 
-## Stack
+```bash
+./scripts/dev-db.sh up
+./scripts/dev-db.sh status
+./scripts/dev-db.sh down     # para (mantém volume)
+./scripts/dev-db.sh reset    # apaga o volume
+```
 
-FastAPI · Pydantic · SQLAlchemy · Alembic · PostgreSQL · Redis · ReportLab · Docker
+## API em Docker (VPS)
 
-## Relação com o frontend
+Não é o fluxo do dia a dia. Compose da API **e** do Postgres (volume `portfolio-api_postgres_data`):
 
-Esta API é consumida pelo meu [portfólio frontend](https://www.hudsondev.tech/). O site renderiza as seções; eu defino aqui o que existe, o que fica visível e quem pode alterar.
+```bash
+docker compose -p portfolio-api --env-file apps/backend/.env \
+  -f infrastructure/docker-compose.yml up -d --build
+```
 
----
+Na VPS, `apps/backend/.env` usa `POSTGRES_HOST=db` e `POSTGRES_PORT=5432` (nome do service, porta interna). O frontend **não** sobe neste compose — continua na Vercel, com root directory `apps/web`.
 
-**Hudson Farias** — Software Developer · Fullstack Engineer · DevOps
+O workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) faz o deploy da API quando mudam `apps/backend/**` ou `infrastructure/**`. Push só em `apps/web/**` não rebuilda a API.
+
+Na primeira subida desta estrutura, o workflow move `.env` da raiz para `apps/backend/.env` se o arquivo novo ainda não existir.

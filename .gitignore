@@ -1,5 +1,37 @@
+# Env
+*.env
+*.env.local
 .env
-venv
-*__pycache__
+.env.*
+!.env.example
+!**/.env.example
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Node / Next
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# pnpm local content-addressable store (never commit)
+.pnpm-store/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Docker / misc
+*.log
 curriculum.pdf

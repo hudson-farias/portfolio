@@ -1,0 +1,30 @@
+# PostgreSQL local — apps sobem no host (uvicorn / next).
+# A partir da raiz:
+#   ./scripts/dev-db.sh up
+
+name: portfolio-api
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    env_file:
+      - ../apps/backend/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
