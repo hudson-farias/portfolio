@@ -90,11 +90,20 @@ def _experience_filters(is_auth: bool, role_id: Optional[int] = None, contract_t
 
 async def load_experiences(is_auth: bool, q: Optional[str] = None, role_id: Optional[int] = None, contract_type: Optional[ContractType] = None, hidden: Optional[bool] = None):
     async with ExperiencesORM() as orm:
-        return await orm.find_filtered(
+        experiences = await orm.find_filtered(
             q = q.strip() if q else None,
             q_columns = ['company'],
             **_experience_filters(is_auth, role_id, contract_type, hidden),
         )
+
+    experiences.sort(key = lambda experience: (experience.sort_order, experience.id))
+    return experiences
+
+
+async def next_sort_order():
+    async with ExperiencesORM() as orm: experiences = await orm.find_many()
+    if not experiences: return 0
+    return max(experience.sort_order for experience in experiences) + 1
 
 
 def experience_translations_model(experience):
@@ -146,6 +155,7 @@ def experience_to_model(experience, framework_ids_by_experience: Dict[int, List[
         contract_type = experience.contract_type,
         live_url = experience.live_url,
         hidden = experience.hidden,
+        sort_order = experience.sort_order,
         role_title = role_translation.title if role_translation else None,
         framework_ids = framework_ids,
         frameworks = frameworks,
@@ -206,6 +216,7 @@ async def persist_experience(params: ExperienceBaseDTO, experience_id: Optional[
 
     async with ExperiencesORM() as orm:
         if experience_id is None:
+            payload['sort_order'] = await next_sort_order()
             await orm.create(**payload)
             experiences = await orm.find_many()
             experience = max(experiences, key = lambda item: item.id)
@@ -230,6 +241,19 @@ async def get_experience(experience_id: int, is_auth: bool = Depends(partial_aut
 @router.post('/experiences', status_code = 201, response_model = ExperiencesResponse)
 async def post_experience(params: ExperienceBaseDTO, is_auth: bool = Depends(has_authenticated)):
     await persist_experience(params)
+    return await response_data(is_auth)
+
+
+@router.put('/experiences/reorder', status_code = 201, response_model = ExperiencesResponse)
+async def reorder_experiences(params: ExperienceReorderDTO, is_auth: bool = Depends(has_authenticated)):
+    async with ExperiencesORM() as orm: experiences = await orm.find_many()
+
+    existing_ids = {experience.id for experience in experiences}
+    if set(params.ids) != existing_ids: raise HTTPException(status_code = 400, detail = 'Informe todos os IDs das experiências na nova ordem.')
+
+    async with ExperiencesORM() as orm:
+        for index, experience_id in enumerate(params.ids): await orm.update(id = experience_id, sort_order = index)
+
     return await response_data(is_auth)
 
 

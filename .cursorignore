@@ -1,0 +1,4 @@
+*.env*
+!.env.example
+!.env.cursor.example
+.env.cursor

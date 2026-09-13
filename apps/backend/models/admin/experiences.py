@@ -21,6 +21,10 @@ class ExperienceTranslations(BaseModel):
 ContractType = Literal['CLT', 'PJ', 'FREELANCER']
 
 
+class ExperienceReorderDTO(BaseModel):
+    ids: List[int]
+
+
 class ExperienceBaseDTO(BaseModel):
     company: str
     role_id: Optional[int] = None
@@ -37,6 +41,7 @@ class Experience(ExperienceBaseDTO):
     description: str
     role_title: Optional[str] = None
     frameworks: List[FrameworkRef] = []
+    sort_order: int
 
 
 class ExperienceRole(BaseModel):

@@ -1,6 +1,9 @@
+import { ChevronDown, ChevronUp } from "lucide-react"
+
 import type { AdminExperience } from "@/app/admin/experiences/interfaces"
 import type { Experience } from "@/types"
 import { SanitizedHtml } from "@/components/sanitized-html"
+import { Button } from "@/components/ui/button"
 
 import { RowActions } from "./row-actions"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "./admin-table"
@@ -12,11 +15,14 @@ function displayRole(item: ExperienceItem) {
   return item.role
 }
 
-export function ExperiencesTable({ items, canMutate, onEdit, getEditHref, onDelete }: { items: ExperienceItem[]; canMutate: boolean; onEdit?: (item: ExperienceItem) => void; getEditHref?: (item: ExperienceItem) => string; onDelete?: (id: number) => void }) {
+export function ExperiencesTable({ items, canMutate, onEdit, getEditHref, onDelete, onMove, reordering = false }: { items: ExperienceItem[]; canMutate: boolean; onEdit?: (item: ExperienceItem) => void; getEditHref?: (item: ExperienceItem) => string; onDelete?: (id: number) => void; onMove?: (index: number, direction: -1 | 1) => void; reordering?: boolean }) {
+  const showOrder = Boolean(canMutate && onMove)
+
   return (
     <AdminTable scrollable>
       <thead>
         <tr className={adminHeadRow}>
+          {showOrder && <th className={adminTh("w-20")}>Ordem</th>}
           <th className={adminTh("min-w-36")}>Empresa</th>
           <th className={adminTh("min-w-36")}>Cargo</th>
           <th className={adminTh("w-24")}>Contrato</th>
@@ -28,8 +34,35 @@ export function ExperiencesTable({ items, canMutate, onEdit, getEditHref, onDele
         </tr>
       </thead>
       <tbody>
-        {items.map((item) => (
+        {items.map((item, index) => (
           <tr key={item.id} className={adminBodyRow}>
+            {showOrder && (
+              <td className={adminTd()}>
+                <div className="flex items-center gap-1">
+                  <span className="w-5 text-center text-xs text-zinc-500">{index + 1}</span>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label={`Mover ${item.company} para cima`}
+                    disabled={reordering || index === 0}
+                    onClick={() => onMove?.(index, -1)}
+                  >
+                    <ChevronUp className="size-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    aria-label={`Mover ${item.company} para baixo`}
+                    disabled={reordering || index === items.length - 1}
+                    onClick={() => onMove?.(index, 1)}
+                  >
+                    <ChevronDown className="size-3.5" />
+                  </Button>
+                </div>
+              </td>
+            )}
             <td className={adminTd("font-medium")}>{item.company}</td>
             <td className={adminTd()}>{displayRole(item)}</td>
             <td className={adminTd("text-zinc-500")}>

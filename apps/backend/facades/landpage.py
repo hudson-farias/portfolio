@@ -143,6 +143,7 @@ class Landpage:
             async with ExperiencesORM() as orm:
                 experiences = await orm.find_many(hidden = False)
 
+            experiences.sort(key = lambda experience: (experience.sort_order, experience.id))
             experience_framework_ids = await self.__fetch_experience_framework_ids()
             self.__experiences = []
 

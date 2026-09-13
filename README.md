@@ -1,81 +1,93 @@
-# Portfolio
+# Portfólio — Hudson Farias
 
-Site e API do portfólio, no mesmo repositório. O login OAuth continua no `portfolio-auth` (repo separado).
+Meu site pessoal e a API que o alimenta, no mesmo repositório. Apresento quem sou, a trajetória e os projetos que escolho mostrar — e atualizo o conteúdo sem republicar o frontend a cada texto.
 
-Sem `shared/`, sem npm workspaces. Frontend e API falam só via HTTP.
+## O que é
 
-## Estrutura
+Juntei duas aplicações que se falam só por HTTP: o site em Next.js (`apps/web`) e a API em FastAPI (`apps/backend`). Não há pacote compartilhado nem workspaces de npm na raiz.
 
-```
-apps/web         # Next.js (host em dev, :3000) — Vercel em produção
-apps/backend     # FastAPI + Alembic (host em dev, :8000)
-infrastructure/  # Compose: Postgres local + API/Postgres na VPS
-scripts/         # Bootstrap do Postgres local
-```
+O site público está em [hudsondev.tech](https://www.hudsondev.tech/). A API sobe à parte, em VPS. O login do painel é OAuth do Discord, no repositório irmão `portfolio-auth`. O visitante vê o conteúdo público; editar exige essa sessão ou uma chave criada em `/admin/api-keys`.
 
-O `portfolio-auth` fica fora deste repo.
+## O site
 
-## Desenvolvimento local
+Em português e inglês (`/pt` e `/en`), com tema claro e escuro.
 
-Apps no **host**; **só o PostgreSQL** em container.
+| Onde | O que mostro |
+|------|----------------|
+| **Sobre** | Nome, cargos, localização, disponibilidade, texto e redes |
+| **Experiência** | Histórico profissional, na ordem que eu defino — e só o que não marquei como oculto |
+| **Projetos** | Repositórios do GitHub que eu publico, e projetos externos quando cadastro um |
+| **Frameworks, bancos, ferramentas, skills** | A stack, na home e em páginas próprias |
+| **Contato** | E-mail e canais do perfil |
+| **Currículo** | PDF gerado pela API a partir do que cadastrei |
 
-### Pré-requisitos
+## Painel
 
-- Docker + Docker Compose (apenas para o Postgres)
-- Python 3.12+ (asdf: `.tool-versions`) + venv do backend
-- Node.js 20+ e pnpm
-- `portfolio-auth` rodando à parte, se for usar o admin
+Em `/admin` eu gerencio perfil, experiências, projetos, frameworks, bancos de dados, ferramentas, skills, linguagens, cargos e redes sociais. O dashboard resume as contagens. As chaves de acesso ficam em `/admin/api-keys` — o segredo aparece só na criação.
 
-### Bootstrap
+Nos projetos, escolho quais repositórios do GitHub entram ou cadastro um externo com a URL do repositório. Título e descrição existem em pt e en.
+
+## A API
+
+As rotas não usam o prefixo `/api`. O site concatena a origem da API com o caminho:
+
+- `/landpage/...` — conteúdo público
+- `/admin/...` — painel
+- `/health` — checagem
+- `/docs` — documentação (caminho do `.env.example` do backend)
+
+O conteúdo fica no PostgreSQL, com traduções em pt e en. O currículo sai de `/landpage/resume`.
+
+## Stack
+
+**Site** — Next.js · React · TypeScript · Tailwind CSS · shadcn/ui
+
+**API** — FastAPI · Pydantic · SQLAlchemy · Alembic · PostgreSQL · ReportLab · Docker
+
+## Como rodar
+
+No dia a dia os apps sobem no host. Só o PostgreSQL fica em container, pelo compose `infrastructure/docker-compose.db.yml` (porta **5433**).
 
 ```bash
-# Use um .env local (127.0.0.1:5433). Não aponte o bootstrap para o Postgres da VPS.
 cp apps/backend/.env.example apps/backend/.env
-# POSTGRES_HOST=127.0.0.1  POSTGRES_PORT=5433
-# AUTH_SERVICE_URL=http://127.0.0.1:8001/api
+# POSTGRES_HOST=127.0.0.1
+# POSTGRES_PORT=5433
+# AUTH_SERVICE_URL=http://localhost:9091
 
-./scripts/dev-bootstrap.sh
+docker compose -p portfolio-api --env-file apps/backend/.env \
+  -f infrastructure/docker-compose.db.yml up -d
 
-cd apps/backend && source venv/bin/activate
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-cd apps/web && cp .env.example .env && pnpm install && pnpm dev
+cd apps/backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-| Peça | Como sobe | URL |
-|------|-----------|-----|
-| PostgreSQL | `./scripts/dev-db.sh up` | `127.0.0.1:5433` |
-| API | `uvicorn` no host | http://localhost:8000/docs |
-| Web | `pnpm dev` | http://localhost:3000 |
-| Auth | repo `portfolio-auth` | http://localhost:8001 |
+A documentação fica em http://localhost:8000/docs. Python 3.12 está no `.tool-versions` e na imagem do `Dockerfile`.
 
-No `.env` do site:
+No site, copie `apps/web/.env.example` para `apps/web/.env`. A origem da API não leva `/api`: o cliente já chama `/landpage/...` e `/admin/...`. O auth do exemplo no backend é `http://localhost:9091`. O CORS do exemplo aceita `http://localhost:3000`.
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-NEXT_PUBLIC_AUTH_URL=http://localhost:8001/api
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_AUTH_URL=http://localhost:9091
 ```
-
-Comandos do banco:
 
 ```bash
-./scripts/dev-db.sh up
-./scripts/dev-db.sh status
-./scripts/dev-db.sh down     # para (mantém volume)
-./scripts/dev-db.sh reset    # apaga o volume
+cd apps/web
+pnpm install && pnpm dev
 ```
 
-## API em Docker (VPS)
+### API na VPS
 
-Não é o fluxo do dia a dia. Compose da API **e** do Postgres (volume `portfolio-api_postgres_data`):
+Não é o fluxo do dia a dia. Esse compose sobe a API e o Postgres; o site não entra nele.
 
 ```bash
 docker compose -p portfolio-api --env-file apps/backend/.env \
   -f infrastructure/docker-compose.yml up -d --build
 ```
 
-Na VPS, `apps/backend/.env` usa `POSTGRES_HOST=db` e `POSTGRES_PORT=5432` (nome do service, porta interna). O frontend **não** sobe neste compose — continua na Vercel, com root directory `apps/web`.
+No `.env` da VPS, o exemplo pede `POSTGRES_HOST=db` e `POSTGRES_PORT=5432`. O workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) republica a API quando mudam `apps/backend/**` ou `infrastructure/**`.
 
-O workflow [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) faz o deploy da API quando mudam `apps/backend/**` ou `infrastructure/**`. Push só em `apps/web/**` não rebuilda a API.
+---
 
-Na primeira subida desta estrutura, o workflow move `.env` da raiz para `apps/backend/.env` se o arquivo novo ainda não existir.
+**Hudson Farias** — Software Developer · Fullstack Engineer · DevOps

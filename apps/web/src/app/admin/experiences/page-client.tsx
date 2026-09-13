@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Briefcase } from "lucide-react"
 
 import { API } from "@/api/client"
-import type { AdminExperiences, ExperiencesPageClientProps } from "./interfaces"
+import type { AdminExperience, AdminExperiences, ExperiencesPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
@@ -42,6 +42,36 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
   const { experiences: initialItems, roles } = data
 
   const { filters, setFilters, clearFilters } = useAdminFilters(FILTER_DEFAULTS)
+  const [reordering, setReordering] = useState(false)
+  const reorderDisabled = Boolean(filters.q || filters.role_id || filters.contract_type || filters.hidden)
+
+  async function persistOrder(nextItems: AdminExperience[]) {
+    if (!canMutate || reorderDisabled) return
+
+    setReordering(true)
+    const next = await adminMutation<AdminExperiences>(
+      () => API.put("/admin/experiences/reorder", { ids: nextItems.map((item) => item.id) }),
+      "Ordem das experiências atualizada.",
+    )
+    setReordering(false)
+
+    if (!next) return
+
+    setData(next)
+    router.refresh()
+    await refreshAuth()
+  }
+
+  async function moveItem(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= initialItems.length) return
+
+    const nextItems = [...initialItems]
+    const [moved] = nextItems.splice(index, 1)
+    nextItems.splice(targetIndex, 0, moved)
+    setData((current) => ({ ...current, experiences: nextItems }))
+    await persistOrder(nextItems)
+  }
 
   async function handleDelete(id: number) {
     if (!canMutate) return
@@ -68,6 +98,13 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
           <AlertBanner
             variant="info"
             message="Faça login para criar, editar ou excluir experiências."
+          />
+        )}
+
+        {canMutate && reorderDisabled && (
+          <AlertBanner
+            variant="info"
+            message="Limpe os filtros para reordenar as experiências pela posição na tabela."
           />
         )}
 
@@ -117,6 +154,8 @@ export function ExperiencesPageClient({ initialData }: ExperiencesPageClientProp
             canMutate={canMutate}
             getEditHref={(item) => `/admin/experiences/${item.id}`}
             onDelete={handleDelete}
+            onMove={canMutate && !reorderDisabled ? moveItem : undefined}
+            reordering={reordering}
           />
         )}
       </div>

@@ -26,6 +26,7 @@ export interface AdminExperience {
   framework_ids?: number[]
   frameworks?: FrameworkRef[]
   translations?: Translations<ExperienceTranslationFields>
+  sort_order?: number
 }
 
 export interface ExperienceRole {

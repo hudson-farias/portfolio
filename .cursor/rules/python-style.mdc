@@ -106,3 +106,7 @@ async def response_data(is_auth: bool, q: Optional[str] = None):
 # services/experiences.py
 async def experience_roles(): ...
 ```
+
+## Repositório irmão — auth
+
+O serviço de autenticação fica em `../portfolio-auth` (irmão deste repo, fora de `apps/`). As convenções desta rule valem lá: sem `->` em return hints e parâmetros na mesma linha. Não misturar padrões do frontend (`apps/web`) nesse código.

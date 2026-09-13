@@ -36,6 +36,7 @@ async def get_dashboard(is_auth: bool = Depends(partial_authenticated)):
         else:
             experiences = await orm.find_many(hidden = False)
 
+    experiences.sort(key = lambda experience: (experience.sort_order, experience.id))
     data.counts.experiences = len(experiences)
     data.experiences = []
     for experience in experiences[:PREVIEW_EXPERIENCES]:

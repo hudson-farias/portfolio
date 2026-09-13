@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { BadgeCheck, Boxes, Briefcase, Database, FolderGit2, Languages, Layers, LayoutDashboard, Share2, User, Wrench } from "lucide-react"
+import { BadgeCheck, Boxes, Briefcase, Database, FolderGit2, KeyRound, Languages, Layers, LayoutDashboard, Share2, User, Wrench } from "lucide-react"
 
+import { useAdminAuth } from "@/contexts/admin-auth"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -21,12 +22,16 @@ const links = [
   { href: "/admin/social-networks", label: "Redes sociais", icon: Share2 },
 ]
 
+const apiKeysLink = { href: "/admin/api-keys", label: "Chaves de acesso", icon: KeyRound }
+
 export function AdminNav() {
   const pathname = usePathname()
+  const { canMutate } = useAdminAuth()
+  const items = canMutate ? [...links, apiKeysLink] : links
 
   return (
     <nav className="flex-1 space-y-1 p-3">
-      {links.map(({ href, label, icon: Icon, exact }) => {
+      {items.map(({ href, label, icon: Icon, exact }) => {
         const active = exact ? pathname === href : pathname.startsWith(href)
 
         return (

@@ -299,7 +299,8 @@ class Curriculum:
         async with ExperiencesORM() as orm:
             experiences = await orm.find_many(hidden = False)
 
-        visible = [experience for experience in experiences[::-1] if experience_matches_filter(experience.id, experience_ids)]
+        visible = [experience for experience in experiences if experience_matches_filter(experience.id, experience_ids)]
+        visible.sort(key = lambda experience: (experience.sort_order, experience.id))
         if not visible: return
 
         self.__add('<b>Experiência Profissional</b>', 'SectionTitle')
