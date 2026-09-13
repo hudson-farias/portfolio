@@ -1,17 +1,11 @@
-# API + PostgreSQL na VPS.
-# A partir da raiz do repo (caminhos relativos a este arquivo):
-#   docker compose -p portfolio-api --env-file apps/backend/.env -f infrastructure/docker-compose.yml up -d --build
-#
-# -p portfolio-api mantém o volume portfolio-api_postgres_data do Compose antigo.
-
 name: portfolio-api
 
 x-backend: &backend
   build:
-    context: ../apps/backend
+    context: apps/backend
     dockerfile: Dockerfile
   env_file:
-    - ../apps/backend/.env
+    - apps/backend/.env
   extra_hosts:
     - "host.docker.internal:host-gateway"
   restart: always
