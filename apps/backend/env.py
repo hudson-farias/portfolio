@@ -9,6 +9,9 @@ REDOCS_PATH = getenv('REDOCS_PATH')
 
 GITHUB_ACCESS_TOKEN = getenv('GITHUB_ACCESS_TOKEN')
 
+GEMINI_API_KEY = getenv('GEMINI_API_KEY')
+GEMINI_MODEL = getenv('GEMINI_MODEL', 'gemini/gemini-3.8-flash')
+
 AUTH_SERVICE_URL = getenv('AUTH_SERVICE_URL')
 
 CORS_ORIGINS = getenv('CORS_ORIGINS', '')

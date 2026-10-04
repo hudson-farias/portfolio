@@ -61,6 +61,7 @@ class DashboardFramework(BaseModel):
     name: str
     icon: str
     scope: Optional[str] = None
+    show: bool = True
 
 
 class DashboardDatabase(BaseModel):

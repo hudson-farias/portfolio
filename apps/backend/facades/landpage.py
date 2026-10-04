@@ -24,8 +24,9 @@ from datetime import datetime
 
 
 class Landpage:
-    def __init__(self, locale: str = 'pt'):
+    def __init__(self, locale: str = 'pt', is_auth: bool = False):
         self.__locale = locale if locale in ('pt', 'en') else 'pt'
+        self.__is_auth = is_auth
         self.__skills = None
         self.__experiences = None
         self.__role_titles = None
@@ -141,8 +142,9 @@ class Landpage:
     async def __fetch_experiences(self):
         if not self.__experiences:
             async with ExperiencesORM() as orm:
-                experiences = await orm.find_many(hidden = False)
+                experiences = await orm.find_many() if self.__is_auth else await orm.find_many(hidden = False)
 
+            experiences = [experience for experience in experiences if not experience.exclude_from_ai]
             experiences.sort(key = lambda experience: (experience.sort_order, experience.id))
             experience_framework_ids = await self.__fetch_experience_framework_ids()
             self.__experiences = []
@@ -351,7 +353,8 @@ class Landpage:
 
     async def __fetch_frameworks(self):
         if not self.__frameworks:
-            async with FrameworksORM() as orm: rows = await orm.find_many()
+            async with FrameworksORM() as orm:
+                rows = await orm.find_many() if self.__is_auth else await orm.find_many(show = True)
             rows.sort(key = lambda framework: (framework.sort_order, framework.id))
 
             async with LanguagesORM() as orm: language_rows = await orm.find_many()

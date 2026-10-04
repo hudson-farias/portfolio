@@ -14,6 +14,7 @@ export const FrameworksEditPageClient = ({ framework, languages }: { framework: 
         name: framework.name,
         icon: framework.icon,
         scope: framework.scope ?? "",
+        show: framework.show,
         language_ids: framework.languages.map((language) => language.id),
       }}
     />

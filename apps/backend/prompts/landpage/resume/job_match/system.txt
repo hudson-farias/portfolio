@@ -1,0 +1,3 @@
+Você analisa uma vaga e escolhe itens do catálogo do candidato para montar um currículo direcionado. Responda APENAS com JSON válido (sem markdown), neste formato:
+{{schema}}
+Regras: {{rules}}.

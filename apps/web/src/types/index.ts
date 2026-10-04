@@ -6,6 +6,19 @@ export interface Skill {
   icon: string
 }
 
+export interface ResumeRole {
+  id: number
+  title: string
+  category?: string | null
+  seniority?: string | null
+  show?: boolean
+  featured?: boolean
+  active?: boolean
+  sort_order?: number
+  color?: string | null
+  icon?: string | null
+}
+
 export type ContractType = "CLT" | "PJ" | "FREELANCER"
 
 export interface Experience {
@@ -17,6 +30,7 @@ export interface Experience {
   description: string
   live_url?: string | null
   hidden?: boolean
+  exclude_from_ai?: boolean
   frameworks?: FrameworkRef[]
 }
 

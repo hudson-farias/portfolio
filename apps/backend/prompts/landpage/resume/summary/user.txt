@@ -1,0 +1,2 @@
+{{instructions_section}}Gere um novo resumo profissional com base neste contexto (JSON):
+{{context}}

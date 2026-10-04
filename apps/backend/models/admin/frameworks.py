@@ -11,6 +11,7 @@ class FrameworkWriteDTO(BaseModel):
     name: str
     icon: str
     scope: Optional[FrameworkScope] = None
+    show: bool = True
     language_ids: List[int] = []
 
 
@@ -23,5 +24,6 @@ class Framework(BaseModel):
     name: str
     icon: str
     scope: Optional[FrameworkScope] = None
+    show: bool = True
     sort_order: int
     languages: List[Language] = []

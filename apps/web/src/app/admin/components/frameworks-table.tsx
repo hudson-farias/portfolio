@@ -3,13 +3,14 @@ import type { AdminFramework } from "../frameworks/interfaces"
 import { AppIcon } from "@/components/icons/app-icon"
 import { AdminTable, adminBodyRow, adminHeadRow, adminTd, adminTh } from "./admin-table"
 
-export const FrameworksTable = ({ items }: { items: AdminFramework[] }) => {
+export const FrameworksTable = ({ items, canMutate = false }: { items: AdminFramework[]; canMutate?: boolean }) => {
   return (
     <AdminTable>
       <thead>
         <tr className={adminHeadRow}>
           <th className={adminTh()}>Framework</th>
           <th className={adminTh()}>Escopo</th>
+          {canMutate && <th className={adminTh()}>Exibir</th>}
         </tr>
       </thead>
       <tbody>
@@ -22,6 +23,7 @@ export const FrameworksTable = ({ items }: { items: AdminFramework[] }) => {
               </span>
             </td>
             <td className={adminTd()}>{adminFrameworkScopeLabel(item.scope)}</td>
+            {canMutate && <td className={adminTd()}>{item.show ? "Sim" : "Não"}</td>}
           </tr>
         ))}
       </tbody>

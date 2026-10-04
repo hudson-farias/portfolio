@@ -97,7 +97,7 @@ export function AdminPageClient({ data }: AdminPageClientProps) {
                     canMutate={canMutate}
                     href="/admin/frameworks"
                 >
-                    <FrameworksTable items={data.frameworks} />
+                    <FrameworksTable items={data.frameworks} canMutate={canMutate} />
                 </Section>
             </div>
 

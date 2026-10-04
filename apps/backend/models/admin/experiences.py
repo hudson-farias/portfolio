@@ -31,6 +31,7 @@ class ExperienceBaseDTO(BaseModel):
     contract_type: Optional[ContractType] = None
     live_url: Optional[str] = None
     hidden: bool = False
+    exclude_from_ai: bool = False
     framework_ids: List[int] = []
     translations: ExperienceTranslations
 

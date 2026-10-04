@@ -1,4 +1,6 @@
 from typing import Optional
+from re import sub
+from urllib.parse import parse_qs, urlparse
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -19,9 +21,64 @@ from database.language_frameworks import LanguageFrameworksORM
 from services.resume_filters import database_matches_filter, experience_matches_filter, framework_matches_filter, skill_matches_filter, tool_matches_filter
 
 
+CONTRACT_TYPE_LABELS_PT = {
+    'CLT': 'CLT',
+    'PJ': 'PJ',
+    'FREELANCER': 'Freelancer',
+}
+
+
+def _whatsapp_digits(value: str):
+    raw = (value or '').strip()
+    if not raw:
+        return ''
+
+    lowered = raw.lower()
+    if lowered.startswith('http') or 'wa.me' in lowered or 'whatsapp' in lowered:
+        url = urlparse(raw if '://' in raw else f'https://{raw}')
+        if 'wa.me' in (url.netloc or ''):
+            return sub(r'\D', '', url.path or '')
+        phone = (parse_qs(url.query or '').get('phone') or [None])[0]
+        if phone:
+            return sub(r'\D', '', phone)
+        return sub(r'\D', '', url.path or '')
+
+    return sub(r'\D', '', raw)
+
+
+def _format_whatsapp(value: str):
+    digits = _whatsapp_digits(value)
+    if not digits:
+        return ''
+
+    if digits.startswith('55') and len(digits) >= 12:
+        ddd = digits[2:4]
+        local = digits[4:]
+        if len(local) >= 9:
+            return f'+55 ({ddd}) {local[:5]}-{local[5:9]}'
+        if len(local) >= 8:
+            return f'+55 ({ddd}) {local[:4]}-{local[4:8]}'
+        return f'+55 ({ddd}) {local}'
+
+    return f'+{digits}'
+
+
+def _sanitize_portfolio_url(value: Optional[str]):
+    raw = (value or '').strip()
+    if not raw:
+        return None
+
+    parsed = urlparse(raw)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return None
+
+    return raw
+
+
 class Curriculum:
-    def __init__(self, filters: Optional[dict] = None):
+    def __init__(self, filters: Optional[dict] = None, is_auth: bool = False):
         self.filters = filters or {}
+        self.is_auth = is_auth
         self.content = []
         self.buffer = BytesIO()
         self.doc = SimpleDocTemplate(self.buffer)
@@ -52,10 +109,17 @@ class Curriculum:
 
     async def __load_roles(self, locale: str = 'pt'):
         if self.roles is None:
-            async with RolesORM() as orm:
-                rows = await orm.find_many(show = True, active = True)
+            header_role_ids = self.filters.get('header_role_ids') or []
 
-            rows.sort(key = lambda role: (not role.featured, role.sort_order, role.id))
+            if header_role_ids:
+                async with RolesORM() as orm:
+                    all_roles = await orm.find_many()
+                by_id = {role.id: role for role in all_roles}
+                rows = [by_id[role_id] for role_id in header_role_ids if role_id in by_id]
+            else:
+                async with RolesORM() as orm:
+                    rows = await orm.find_many(show = True, active = True)
+                rows.sort(key = lambda role: (not role.featured, role.sort_order, role.id))
 
             self.roles = []
             for role in rows:
@@ -63,7 +127,9 @@ class Curriculum:
                 if not picked:
                     picked = [t for t in role.translations if t.locale == 'pt']
                 translation = picked[0] if picked else None
-                self.roles.append(translation.title or '' if translation else '')
+                title = translation.title or '' if translation else ''
+                if title:
+                    self.roles.append(title)
 
         return self.roles
 
@@ -92,17 +158,29 @@ class Curriculum:
         location = picked[0] if picked else None
         if location: self.__add(location.location, spacer = 3)
 
-        contact_parts = [part for part in [profile.email, profile.whatsapp] if part]
-        if contact_parts: self.__add(' | '.join(contact_parts), spacer = 3)
+        portfolio_url = _sanitize_portfolio_url(self.filters.get('portfolio_url'))
+        if portfolio_url: self.__add(portfolio_url, spacer = 3)
+
+        whatsapp = _format_whatsapp(profile.whatsapp) if profile.whatsapp else ''
+        if profile.email: self.__add(profile.email, spacer = 3)
+        if whatsapp: self.__add(f'{whatsapp} <font size="8">(Somente mensagens via WhatsApp)</font>', spacer = 3)
 
         self.__add('<br />')
 
 
     async def __summary(self):
-        profile = await self.__load_profile()
-        picked = [t for t in profile.translations if t.locale == 'pt']
-        translation = picked[0] if picked else None
-        about_me = translation.about_me if translation else None
+        if self.filters.get('include_summary', True) is False:
+            return
+
+        override = self.filters.get('summary')
+        if override is not None:
+            about_me = str(override).strip()
+        else:
+            profile = await self.__load_profile()
+            picked = [t for t in profile.translations if t.locale == 'pt']
+            translation = picked[0] if picked else None
+            about_me = translation.about_me if translation else None
+
         if not about_me: return
 
         self.__add('<b>Resumo Profissional</b>', 'SectionTitle')
@@ -129,23 +207,54 @@ class Curriculum:
         self.__add('<br />')
 
 
+    async def __languages(self):
+        framework_ids = self.filters.get('framework_ids', set())
+        language_ids = self.filters.get('language_ids', set())
+
+        included_language_ids = set(language_ids)
+
+        # Linguagens dos frameworks que entram no CV (framework_matches_filter inalterado).
+        if framework_ids or (not language_ids and self.__section_enabled('frameworks')):
+            async with FrameworksORM() as orm:
+                framework_rows = await orm.find_many() if self.is_auth else await orm.find_many(show = True)
+            if framework_rows:
+                async with LanguageFrameworksORM() as orm: relations = await orm.find_many()
+                languages_by_framework = {}
+
+                for relation in relations:
+                    languages_by_framework.setdefault(relation.framework_id, []).append(relation.language_id)
+
+                for framework in framework_rows:
+                    if not framework_matches_filter(framework.id, framework_ids, language_ids):
+                        continue
+                    included_language_ids.update(languages_by_framework.get(framework.id, []))
+
+        if not included_language_ids: return
+
+        async with LanguagesORM() as orm: language_rows = await orm.find_many()
+        language_names = [
+            row.name
+            for row in language_rows
+            if row.id in included_language_ids and row.name
+        ]
+        language_names.sort(key = lambda name: name.lower())
+        if not language_names: return
+
+        self.__add('<b>Linguagens</b>', 'SectionTitle')
+        self.__add(', '.join(language_names))
+        self.__add('<br />')
+
+
     async def __frameworks(self):
         framework_ids = self.filters.get('framework_ids', set())
         language_ids = self.filters.get('language_ids', set())
 
-        if not framework_ids and not language_ids and not self.__section_enabled('frameworks'): return
+        if language_ids and not framework_ids: return
+        if not framework_ids and not self.__section_enabled('frameworks'): return
 
-        async with FrameworksORM() as orm: framework_rows = await orm.find_many()
+        async with FrameworksORM() as orm:
+            framework_rows = await orm.find_many() if self.is_auth else await orm.find_many(show = True)
         if not framework_rows: return
-
-        async with LanguagesORM() as orm: language_rows = await orm.find_many()
-        languages_by_id = {row.id: row for row in language_rows}
-
-        async with LanguageFrameworksORM() as orm: relations = await orm.find_many()
-        languages_by_framework = {}
-
-        for relation in relations:
-            languages_by_framework.setdefault(relation.framework_id, []).append(relation.language_id)
 
         framework_rows.sort(key = lambda framework: (framework.sort_order, framework.id))
 
@@ -160,24 +269,11 @@ class Curriculum:
         grouped = {}
 
         for framework in framework_rows:
-            linked_language_ids = set(languages_by_framework.get(framework.id, []))
-
-            if not framework_matches_filter(framework.id, linked_language_ids, framework_ids, language_ids):
+            if not framework_matches_filter(framework.id, framework_ids, language_ids):
                 continue
 
-            linked = [
-                languages_by_id[language_id].name
-                for language_id in linked_language_ids
-                if language_id in languages_by_id
-            ]
-            linked.sort(key = lambda name: name.lower())
-
-            label = framework.name
-            if linked:
-                label = f'{framework.name} ({", ".join(linked)})'
-
             scope_key = framework.scope or 'other'
-            grouped.setdefault(scope_key, []).append(label)
+            grouped.setdefault(scope_key, []).append(framework.name)
 
         if not grouped: return
 
@@ -248,18 +344,10 @@ class Curriculum:
 
 
     async def __load_framework_labels(self):
-        async with FrameworksORM() as orm: framework_rows = await orm.find_many()
+        async with FrameworksORM() as orm:
+            framework_rows = await orm.find_many() if self.is_auth else await orm.find_many(show = True)
         framework_rows.sort(key = lambda framework: (framework.sort_order, framework.id))
         frameworks_by_id = {framework.id: framework for framework in framework_rows}
-
-        async with LanguagesORM() as orm: language_rows = await orm.find_many()
-        languages_by_id = {row.id: row for row in language_rows}
-
-        async with LanguageFrameworksORM() as orm: relations = await orm.find_many()
-        languages_by_framework = {}
-
-        for relation in relations:
-            languages_by_framework.setdefault(relation.framework_id, []).append(relation.language_id)
 
         def labels_for_ids(framework_ids):
             items = []
@@ -267,19 +355,7 @@ class Curriculum:
             for framework_id in framework_ids:
                 framework = frameworks_by_id.get(framework_id)
                 if not framework: continue
-
-                linked = [
-                    languages_by_id[language_id].name
-                    for language_id in languages_by_framework.get(framework_id, [])
-                    if language_id in languages_by_id
-                ]
-                linked.sort(key = lambda name: name.lower())
-
-                label = framework.name
-                if linked:
-                    label = f'{framework.name} ({", ".join(linked)})'
-
-                items.append(label)
+                items.append(framework.name)
 
             return items
 
@@ -292,14 +368,36 @@ class Curriculum:
         return experience_framework_ids, labels_for_ids
 
 
+    async def __roles_by_id(self):
+        async with RolesORM() as orm:
+            roles = await orm.find_many()
+        return {role.id: role for role in roles}
+
+
+    def __role_title(self, role, locale: str = 'pt'):
+        if not role:
+            return ''
+
+        picked = [t for t in role.translations if t.locale == locale]
+        if not picked:
+            picked = [t for t in role.translations if t.locale == 'pt']
+        translation = picked[0] if picked else None
+        return translation.title or '' if translation else ''
+
+
     async def __experience(self):
         experience_ids = self.filters.get('experience_ids', set())
+        experience_roles = self.filters.get('experience_roles') or {}
         experience_framework_ids, labels_for_ids = await self.__load_framework_labels()
+        roles_by_id = await self.__roles_by_id() if experience_roles else {}
 
         async with ExperiencesORM() as orm:
-            experiences = await orm.find_many(hidden = False)
+            experiences = await orm.find_many() if self.is_auth else await orm.find_many(hidden = False)
 
-        visible = [experience for experience in experiences if experience_matches_filter(experience.id, experience_ids)]
+        visible = [
+            experience for experience in experiences
+            if not experience.exclude_from_ai and experience_matches_filter(experience.id, experience_ids)
+        ]
         visible.sort(key = lambda experience: (experience.sort_order, experience.id))
         if not visible: return
 
@@ -309,15 +407,18 @@ class Curriculum:
             picked = [t for t in experience.translations if t.locale == 'pt']
             translation = picked[0] if picked else None
 
-            role_translation = None
-            if experience.role:
-                role_picked = [t for t in experience.role.translations if t.locale == 'pt']
-                role_translation = role_picked[0] if role_picked else None
+            override_role_id = experience_roles.get(experience.id)
+            role_title = ''
+            if override_role_id is not None:
+                role_title = self.__role_title(roles_by_id.get(override_role_id))
+            if not role_title:
+                role_title = self.__role_title(experience.role)
 
             period = translation.period or '' if translation else ''
             description = translation.description or '' if translation else ''
-            title = f'{experience.company} | {role_translation.title or "" if role_translation else ""}'
-            self.__add(f'<b>{title} | {period} </b>', 'SectionSubtitle')
+            contract_label = CONTRACT_TYPE_LABELS_PT.get(experience.contract_type) if experience.contract_type else None
+            title_parts = [part for part in [experience.company, role_title, period, contract_label] if part]
+            self.__add(f'<b>{" | ".join(title_parts)}</b>', 'SectionSubtitle')
             self.__add(description.replace('\n', '<br />'))
 
             stack_labels = labels_for_ids(experience_framework_ids.get(experience.id, []))
@@ -335,10 +436,11 @@ class Curriculum:
     async def generate(self):
         await self.__header()
         await self.__summary()
-        await self.__skills()
+        await self.__languages()
         await self.__frameworks()
         await self.__databases()
         await self.__tools()
+        await self.__skills()
         await self.__experience()
         await self.__education()
 

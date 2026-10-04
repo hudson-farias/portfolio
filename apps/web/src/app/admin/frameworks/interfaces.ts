@@ -9,6 +9,7 @@ export interface AdminFramework {
   name: string
   icon: string
   scope: FrameworkScopeValue | null
+  show: boolean
   sort_order: number
   languages: AdminLanguage[]
 }
@@ -17,6 +18,7 @@ export interface FrameworkForm {
   name: string
   icon: string
   scope: FrameworkScopeValue | ""
+  show: boolean
   language_ids: number[]
 }
 

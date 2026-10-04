@@ -18,6 +18,7 @@ function experienceToForm(item: AdminExperience): ExperienceForm {
     contract_type: item.contract_type ?? "",
     live_url: item.live_url ?? "",
     hidden: item.hidden ?? false,
+    exclude_from_ai: item.exclude_from_ai ?? false,
     framework_ids: item.framework_ids ?? item.frameworks?.map((framework) => framework.id) ?? [],
     translations: resolveTranslations(
       TRANSLATION_KEYS,

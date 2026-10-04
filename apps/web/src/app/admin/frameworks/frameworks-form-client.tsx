@@ -9,7 +9,7 @@ import type { AdminLanguage } from "../languages/interfaces"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
 import { FormPageLayout } from "../components/form-page-layout"
-import { Field, SelectInput, TextInput } from "../components/form-fields"
+import { CheckboxField, Field, SelectInput, TextInput } from "../components/form-fields"
 import { IconSelect } from "../components/icon-select"
 import { AppIcon } from "@/components/icons/app-icon"
 import { adminMutation } from "@/lib/admin/admin-toast"
@@ -21,6 +21,7 @@ function formToPayload(form: FrameworkForm) {
     name: form.name,
     icon: form.icon,
     scope: form.scope || null,
+    show: form.show,
     language_ids: form.language_ids,
   }
 }
@@ -127,6 +128,11 @@ export const FrameworksFormClient = ({ mode, frameworkId, initialForm, languages
             </div>
           )}
         </Field>
+        <CheckboxField
+          label="Exibir no site"
+          checked={form.show}
+          onChange={(checked) => setForm((current) => ({ ...current, show: checked }))}
+        />
       </FormPageLayout>
     </>
   )

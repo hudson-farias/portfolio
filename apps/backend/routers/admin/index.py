@@ -110,7 +110,12 @@ async def get_dashboard(is_auth: bool = Depends(partial_authenticated)):
         for item in languages[:PREVIEW_LANGUAGES]
     ]
 
-    async with FrameworksORM() as orm: frameworks = await orm.find_many()
+    async with FrameworksORM() as orm:
+        if is_auth:
+            frameworks = await orm.find_many()
+        else:
+            frameworks = await orm.find_many(show = True)
+
     frameworks.sort(key = lambda framework: (framework.sort_order, framework.id))
 
     data.counts.frameworks = len(frameworks)

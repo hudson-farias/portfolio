@@ -10,7 +10,7 @@ import type { AdminFramework, FrameworksPageClientProps } from "./interfaces"
 import { FILTER_DEFAULTS } from "./filters"
 import { useAdminAuth } from "@/contexts/admin-auth"
 import { AlertBanner } from "../components/alert-banner"
-import { AdminListFilters } from "../components/admin-list-filters"
+import { AdminFilterField, AdminFilterSelect, AdminListFilters } from "../components/admin-list-filters"
 import { AdminTable, adminActionsCol, adminBodyRow, adminHeadRow, adminTd, adminTh } from "../components/admin-table"
 import { PageHeader } from "../components/page-header"
 import { AppIcon } from "@/components/icons/app-icon"
@@ -21,6 +21,24 @@ import { useAdminFilters } from "@/lib/admin/use-admin-filters"
 
 import { adminFrameworkScopeLabel } from "@/lib/framework-scope"
 
+const BOOL_FILTER_OPTIONS = [
+  { value: "", label: "Todos" },
+  { value: "true", label: "Exibidos" },
+  { value: "false", label: "Ocultos" },
+]
+
+function boolBadge(value: boolean, yes = "Sim", no = "Não") {
+  return value ? (
+    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+      {yes}
+    </span>
+  ) : (
+    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+      {no}
+    </span>
+  )
+}
+
 export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps) {
   const router = useRouter()
   const { canMutate, refreshAuth } = useAdminAuth()
@@ -29,7 +47,7 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
   const [items, setItems] = useState(initialItems)
   const [reordering, setReordering] = useState(false)
 
-  const reorderDisabled = Boolean(filters.q)
+  const reorderDisabled = Boolean(filters.q || filters.show)
 
   useEffect(() => {
     setItems(initialItems)
@@ -80,7 +98,7 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
     <div>
       <PageHeader
         title="Frameworks"
-        description="Frameworks exibidos em /frameworks, com vínculo às linguagens"
+        description="Frameworks do site público e do currículo — use Exibir no site para controlar a visibilidade"
         icon={Boxes}
         canMutate={canMutate}
         addHref="/admin/frameworks/new"
@@ -99,7 +117,17 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
           search={filters.q}
           onSearchSubmit={(q) => setFilters((current) => ({ ...current, q }))}
           onClear={clearFilters}
-        />
+        >
+          {canMutate && (
+            <AdminFilterField label="Exibir">
+              <AdminFilterSelect
+                value={filters.show}
+                onValueChange={(show) => setFilters((current) => ({ ...current, show }))}
+                options={BOOL_FILTER_OPTIONS}
+              />
+            </AdminFilterField>
+          )}
+        </AdminListFilters>
 
         {items.length === 0 ? (
           <p className="text-sm text-zinc-500">Nenhum framework cadastrado.</p>
@@ -110,6 +138,7 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
                 {canMutate && !reorderDisabled && <th className={adminTh("w-20")}>Ordem</th>}
                 <th className={adminTh()}>Framework</th>
                 <th className={adminTh("w-28")}>Escopo</th>
+                {canMutate && <th className={adminTh("w-20")}>Exibir</th>}
                 <th className={adminTh()}>Linguagens</th>
                 {canMutate && <th className={adminTh(adminActionsCol)}>Ações</th>}
               </tr>
@@ -151,6 +180,7 @@ export function FrameworksPageClient({ initialItems }: FrameworksPageClientProps
                     </span>
                   </td>
                   <td className={adminTd("text-zinc-500")}>{adminFrameworkScopeLabel(item.scope)}</td>
+                  {canMutate && <td className={adminTd()}>{boolBadge(item.show)}</td>}
                   <td className={adminTd("text-zinc-500")}>
                     {item.languages.length > 0
                       ? item.languages.map((language) => language.name).join(", ")

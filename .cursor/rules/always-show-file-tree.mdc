@@ -1,0 +1,35 @@
+---
+description: Antes de planejar ou implementar, mostrar a árvore de arquivos a alterar/criar
+alwaysApply: true
+---
+
+# Sempre mostrar árvore de arquivos
+
+Ao **planejar** ou **implementar**, o agente deve informar a árvore de arquivos que pretende alterar ou criar **antes** de editar qualquer arquivo, e de novo ao **resumir** o trabalho.
+
+## Obrigatório
+
+- Listar só o que entra na rodada (não o repositório inteiro).
+- Marcar cada item como `(novo)` ou `(edit)`.
+- Agrupar por app/projeto (`apps/backend/`, `apps/web/`, docs, `.cursor/`, etc.).
+- Mostrar a árvore **antes** da primeira edição e no resumo final (paths criados/editados).
+- Esta regra **não** substitui `preserve-vscode-edits` nem `python-style`: diffs mínimos, sem reformatar o que o usuário editou, e convenções Python do backend permanecem.
+
+## Formato
+
+```text
+apps/backend/
+├── foo.py (edit)
+└── bar.py (novo)
+
+apps/web/src/
+└── app/.../resume-preview.tsx (novo)
+```
+
+## Quando aplicar
+
+- Planejamento (Plan mode ou plano escrito).
+- Implementação (qualquer criação/edição de arquivos).
+- Resumo ao concluir a tarefa.
+
+Omitir só se a resposta for puramente informativa (sem planejar nem alterar arquivos).

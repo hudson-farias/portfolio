@@ -23,6 +23,7 @@ export interface AdminExperience {
   description: string
   live_url?: string | null
   hidden?: boolean
+  exclude_from_ai?: boolean
   framework_ids?: number[]
   frameworks?: FrameworkRef[]
   translations?: Translations<ExperienceTranslationFields>
@@ -48,6 +49,7 @@ export interface ExperienceForm {
   contract_type: string
   live_url: string
   hidden: boolean
+  exclude_from_ai: boolean
   framework_ids: number[]
   translations: Record<LocaleCode, ExperienceTranslationFields>
 }

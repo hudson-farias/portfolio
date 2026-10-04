@@ -13,6 +13,7 @@ class ExperiencesORM(Base):
     contract_type = Column(String(20), nullable = True)
     live_url = Column(String(150), nullable = True)
     hidden = Column(Boolean, nullable = False, default = False)
+    exclude_from_ai = Column(Boolean, nullable = False, default = False)
     sort_order = Column(Integer, nullable = False, default = 0)
 
     role = relationship('RolesORM', foreign_keys = [role_id], lazy = 'selectin')

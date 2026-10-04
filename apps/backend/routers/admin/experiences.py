@@ -155,6 +155,7 @@ def experience_to_model(experience, framework_ids_by_experience: Dict[int, List[
         contract_type = experience.contract_type,
         live_url = experience.live_url,
         hidden = experience.hidden,
+        exclude_from_ai = experience.exclude_from_ai,
         sort_order = experience.sort_order,
         role_title = role_translation.title if role_translation else None,
         framework_ids = framework_ids,
@@ -212,6 +213,7 @@ async def persist_experience(params: ExperienceBaseDTO, experience_id: Optional[
         'contract_type': params.contract_type,
         'live_url': params.live_url,
         'hidden': params.hidden,
+        'exclude_from_ai': params.exclude_from_ai,
     }
 
     async with ExperiencesORM() as orm:

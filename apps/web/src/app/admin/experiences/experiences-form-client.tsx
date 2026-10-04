@@ -34,6 +34,7 @@ export function emptyExperienceForm(defaultRoleId = ""): ExperienceForm {
     contract_type: "",
     live_url: "",
     hidden: false,
+    exclude_from_ai: false,
     framework_ids: [],
     translations: emptyTranslations(emptyExperienceTranslationFields),
   }
@@ -206,6 +207,11 @@ export const ExperiencesFormClient = ({ mode, experienceId, initialForm, roles, 
           label="Ocultar (visível apenas com login no admin)"
           checked={form.hidden}
           onChange={(checked) => setForm((f) => ({ ...f, hidden: checked }))}
+        />
+        <CheckboxField
+          label="Desativar"
+          checked={form.exclude_from_ai}
+          onChange={(checked) => setForm((f) => ({ ...f, exclude_from_ai: checked }))}
         />
       </FormPageLayout>
     </>

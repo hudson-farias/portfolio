@@ -17,7 +17,7 @@ Em português e inglês (`/pt` e `/en`), com tema claro e escuro.
 | **Sobre** | Nome, cargos, localização, disponibilidade, texto e redes |
 | **Experiência** | Histórico profissional, na ordem que eu defino — e só o que não marquei como oculto |
 | **Projetos** | Repositórios do GitHub que eu publico, e projetos externos quando cadastro um |
-| **Frameworks, bancos, ferramentas, skills** | A stack, na home e em páginas próprias |
+| **Frameworks, bancos, ferramentas, skills** | A stack, na home e em páginas próprias — frameworks só entram no público se estiverem com “Exibir no site” |
 | **Contato** | E-mail e canais do perfil |
 | **Currículo** | PDF gerado pela API a partir do que cadastrei |
 
@@ -37,6 +37,13 @@ As rotas não usam o prefixo `/api`. O site concatena a origem da API com o cami
 - `/docs` — documentação (caminho do `.env.example` do backend)
 
 O conteúdo fica no PostgreSQL, com traduções em pt e en. O currículo sai de `/landpage/resume`.
+
+Com sessão admin (cookie `ACCESS_TOKEN_ADMIN` ou Bearer), há também:
+
+- `POST /landpage/resume/job-match` — body `{ "url": "https://..." }`; analisa a vaga com Gemini e devolve filtros sugeridos + skills faltantes
+- `POST /landpage/resume/skills` — body `{ "name", "icon" }`; cria uma skill sem passar por `/admin`
+
+No `.env` do backend: `GEMINI_API_KEY` (obrigatória para o job-match) e opcionalmente `GEMINI_MODEL` (default `gemini/gemini-3.8-flash`). A chave fica só na API. Se ainda estiver `gemini/gemini-2.0-flash`, troque — esse modelo foi descontinuado.
 
 ## Stack
 
@@ -60,8 +67,12 @@ docker compose -p portfolio-api --env-file apps/backend/.env \
 cd apps/backend
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
+
+Migrations ficam em `apps/backend/alembic/versions/`. Depois de puxar código que altera o schema, rode `alembic upgrade head` no diretório do backend (com o `.env` apontando para o Postgres).
+
 
 A documentação fica em http://localhost:8000/docs. Python 3.12 está no `.tool-versions` e na imagem do `Dockerfile`.
 
