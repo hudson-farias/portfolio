@@ -22,7 +22,21 @@ export const defaultResumeFilters = (): ResumeFilterState => ({
   includeTools: false,
 })
 
-export function buildResumeQuery(filters: ResumeFilterState, portfolioUrl?: string | null) {
+export type ExperienceRoleAssignment = {
+  experience_id: number
+  role_id: number
+}
+
+export function buildResumeQuery(
+  filters: ResumeFilterState,
+  portfolioUrl?: string | null,
+  options?: {
+    includeSummary?: boolean
+    summary?: string | null
+    experienceRoles?: ExperienceRoleAssignment[]
+    headerRoleIds?: number[] | null
+  },
+) {
   const params = new URLSearchParams()
 
   if (filters.sections.length > 0) {
@@ -57,9 +71,29 @@ export function buildResumeQuery(filters: ResumeFilterState, portfolioUrl?: stri
     params.set("include_tools", "1")
   }
 
+  if (options?.includeSummary === false) {
+    params.set("include_summary", "0")
+  }
+
   const trimmedPortfolioUrl = portfolioUrl?.trim()
   if (trimmedPortfolioUrl) {
     params.set("portfolio_url", trimmedPortfolioUrl)
+  }
+
+  const summary = options?.summary?.trim()
+  if (summary) {
+    params.set("summary", summary)
+  }
+
+  if (options?.experienceRoles?.length) {
+    params.set(
+      "experience_roles",
+      options.experienceRoles.map((item) => `${item.experience_id}:${item.role_id}`).join(","),
+    )
+  }
+
+  if (options?.headerRoleIds?.length) {
+    params.set("header_role_ids", options.headerRoleIds.join(","))
   }
 
   return params.toString()
@@ -69,11 +103,6 @@ export function resumeDownloadPath(filters: ResumeFilterState, apiBaseUrl: strin
   const query = buildResumeQuery(filters)
   const base = apiBaseUrl.replace(/\/$/, "")
   return query ? `${base}/landpage/resume?${query}` : `${base}/landpage/resume`
-}
-
-export type ExperienceRoleAssignment = {
-  experience_id: number
-  role_id: number
 }
 
 export function experienceRolesFromOverrides(overrides: Record<number, number>): ExperienceRoleAssignment[] {

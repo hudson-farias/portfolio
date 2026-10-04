@@ -19,7 +19,7 @@ Em português e inglês (`/pt` e `/en`), com tema claro e escuro.
 | **Projetos** | Repositórios do GitHub que eu publico, e projetos externos quando cadastro um |
 | **Frameworks, bancos, ferramentas, skills** | A stack, na home e em páginas próprias — frameworks só entram no público se estiverem com “Exibir no site” |
 | **Contato** | E-mail e canais do perfil |
-| **Currículo** | PDF gerado pela API a partir do que cadastrei |
+| **Currículo** | PDF com filtros de stack e experiências; com sessão admin, matching de vaga via Gemini (filtros, títulos, cargos, skills faltantes e resumo) |
 
 ## Painel
 
@@ -36,20 +36,24 @@ As rotas não usam o prefixo `/api`. O site concatena a origem da API com o cami
 - `/health` — checagem
 - `/docs` — documentação (caminho do `.env.example` do backend)
 
-O conteúdo fica no PostgreSQL, com traduções em pt e en. O currículo sai de `/landpage/resume`.
+O conteúdo fica no PostgreSQL, com traduções em pt e en. O currículo sai de `/landpage/resume` (GET público / POST com filtros no body).
 
-Com sessão admin (cookie `ACCESS_TOKEN_ADMIN` ou Bearer), há também:
+Com sessão admin (cookie `ACCESS_TOKEN_ADMIN` ou Bearer da chave em `/admin/api-keys`), o gerador ganha ferramentas de IA (Gemini via LiteLLM):
 
-- `POST /landpage/resume/job-match` — body `{ "url": "https://..." }`; analisa a vaga com Gemini e devolve filtros sugeridos + skills faltantes
+- `POST /landpage/resume/job-match` — body `{ "url", "instructions?", "suggest_*" }`; busca a página da vaga, analisa com Gemini e devolve filtros sugeridos, cargos por experiência, títulos do header, skills faltantes e um breve rationale
+- `POST /landpage/resume/summary` — regera o resumo profissional a partir dos filtros (e instruções opcionais)
+- `POST /landpage/resume/save` — persiste por tipo: `summary` (about_me), `experience_role` ou `header_roles`
 - `POST /landpage/resume/skills` — body `{ "name", "icon" }`; cria uma skill sem passar por `/admin`
 
-No `.env` do backend: `GEMINI_API_KEY` (obrigatória para o job-match) e opcionalmente `GEMINI_MODEL` (default `gemini/gemini-3.8-flash`). A chave fica só na API. Se ainda estiver `gemini/gemini-2.0-flash`, troque — esse modelo foi descontinuado.
+No site (`/pt/resume` ou `/en/resume`), com login, dá para colar a URL da vaga, marcar o que a IA pode sugerir, revisar no modal de sugestões e aplicar na prévia/PDF.
+
+No `.env` do backend: `GEMINI_API_KEY` (obrigatória para job-match e summary) e opcionalmente `GEMINI_MODEL` (default `gemini/gemini-3.8-flash`). A chave fica só na API. Se ainda estiver `gemini/gemini-2.0-flash`, troque — esse modelo foi descontinuado.
 
 ## Stack
 
 **Site** — Next.js · React · TypeScript · Tailwind CSS · shadcn/ui
 
-**API** — FastAPI · Pydantic · SQLAlchemy · Alembic · PostgreSQL · ReportLab · Docker
+**API** — FastAPI · Pydantic · SQLAlchemy · Alembic · PostgreSQL · ReportLab · LiteLLM (Gemini) · Docker
 
 ## Como rodar
 

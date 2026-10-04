@@ -226,6 +226,8 @@
       "analyze": "Analisar vaga",
       "analyzing": "Analisando…",
       "analyzeError": "Não foi possível analisar a vaga.",
+      "matchBadge": "{percent}% match",
+      "matchBadgeHint": "Compatibilidade estimada pela IA com a vaga analisada",
       "missingSkills": "Skills faltantes",
       "addSkill": "Adicionar",
       "addingSkill": "Adicionando…",

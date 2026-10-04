@@ -154,6 +154,7 @@ def build_prompt_variables(catalog: dict, job_text: str, instructions: str = '',
         schema_lines.append('  "role_ids": [int],')
     if suggest.missing_skills:
         schema_lines.append('  "missing_skills": [{"name": "string"}],')
+    schema_lines.append('  "match_percent": int,')
     schema_lines.append('  "rationale": "string curta"')
     schema_lines.append('}')
 
@@ -166,6 +167,7 @@ def build_prompt_variables(catalog: dict, job_text: str, instructions: str = '',
         rules.append('em experience_roles, sugira um role_id do catálogo de roles para cada experiência selecionada (ou as mais relevantes)')
     if suggest.header_roles:
         rules.append('em role_ids, sugira 1 a 3 títulos profissionais do catálogo de roles para o header do currículo (topo do PDF)')
+    rules.append('match_percent é inteiro de 0 a 100: compatibilidade do candidato com a vaga (stack, experiências e lacunas)')
     rules.append('seja seletivo — priorize o que a vaga realmente pede')
 
     omit = []
@@ -224,6 +226,22 @@ def as_int_list(raw, valid: set):
             result.append(value)
 
     return result
+
+
+def as_match_percent(raw):
+    if raw is None or raw == '':
+        return None
+
+    try:
+        value = int(round(float(raw)))
+    except (TypeError, ValueError):
+        return None
+
+    if value < 0:
+        return 0
+    if value > 100:
+        return 100
+    return value
 
 
 def as_experience_roles(raw, valid_experience_ids: set, valid_role_ids: set):
@@ -288,9 +306,10 @@ def validate_ai_payload(data: dict, valid_ids: dict, suggest: Optional[JobMatchS
 
     experience_roles = as_experience_roles(data.get('experience_roles'), valid_ids['experience_ids'], valid_ids['role_ids']) if suggest.experience_roles else []
     role_ids = as_int_list(data.get('role_ids'), valid_ids['role_ids']) if suggest.header_roles else []
+    match_percent = as_match_percent(data.get('match_percent'))
     rationale = str(data.get('rationale') or '').strip()
 
-    return JobMatchResponse(filters = filters, missing_skills = missing_skills, experience_roles = experience_roles, role_ids = role_ids, rationale = rationale)
+    return JobMatchResponse(filters = filters, missing_skills = missing_skills, experience_roles = experience_roles, role_ids = role_ids, match_percent = match_percent, rationale = rationale)
 
 
 @router.post('/resume/job-match', status_code = 200, response_model = JobMatchResponse)

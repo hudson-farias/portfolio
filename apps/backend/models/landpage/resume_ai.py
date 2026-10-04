@@ -45,6 +45,7 @@ class JobMatchResponse(BaseModel):
     missing_skills: List[MissingSkill] = []
     experience_roles: List[ExperienceRoleAssignment] = []
     role_ids: List[int] = []
+    match_percent: Optional[int] = None
     rationale: str = ''
 
 

@@ -27,6 +27,7 @@ type JobMatchResponse = {
   missing_skills: { name: string }[]
   experience_roles?: ExperienceRoleAssignment[]
   role_ids?: number[]
+  match_percent?: number | null
   rationale: string
 }
 
@@ -51,6 +52,13 @@ function filtersFromMatch(payload: JobMatchFilters): ResumeFilterState {
   }
 }
 
+function normalizeMatchPercent(value: unknown) {
+  if (value == null || value === "") return null
+  const parsed = Math.round(Number(value))
+  if (!Number.isFinite(parsed)) return null
+  return Math.min(100, Math.max(0, parsed))
+}
+
 export function ResumeJobMatch({
   instructions,
   suggest,
@@ -58,6 +66,8 @@ export function ResumeJobMatch({
   onApplyExperienceRoles,
   onApplyHeaderRoles,
   onMissingSkills,
+  onMatchPercent,
+  onMatchRationale,
   onRegenerateSummary,
 }: {
   instructions: string
@@ -66,13 +76,14 @@ export function ResumeJobMatch({
   onApplyExperienceRoles: (overrides: Record<number, number>) => void
   onApplyHeaderRoles: (roleIds: number[]) => void
   onMissingSkills: (skills: { name: string }[]) => void
+  onMatchPercent: (percent: number | null) => void
+  onMatchRationale: (rationale: string | null) => void
   onRegenerateSummary: (filters?: ResumeFilterState) => Promise<void>
 }) {
   const { t } = useSiteLocale()
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [rationale, setRationale] = useState<string | null>(null)
 
   async function analyze() {
     const trimmed = url.trim()
@@ -83,7 +94,8 @@ export function ResumeJobMatch({
 
     setLoading(true)
     setError(null)
-    setRationale(null)
+    onMatchPercent(null)
+    onMatchRationale(null)
 
     try {
       const response = await API.post("/landpage/resume/job-match", {
@@ -127,7 +139,8 @@ export function ResumeJobMatch({
         onMissingSkills([])
       }
 
-      setRationale(data.rationale ?? null)
+      onMatchPercent(normalizeMatchPercent(data.match_percent))
+      onMatchRationale((data.rationale || "").trim() || null)
 
       if (suggest.summary) {
         await onRegenerateSummary(suggest.filters ? matchedFilters : undefined)
@@ -162,8 +175,6 @@ export function ResumeJobMatch({
       </div>
 
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      {rationale ? <p className="text-xs text-muted-foreground">{rationale}</p> : null}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+from html import escape
 from typing import Optional
 from re import sub
 from urllib.parse import parse_qs, urlparse
@@ -73,6 +74,16 @@ def _sanitize_portfolio_url(value: Optional[str]):
         return None
 
     return raw
+
+
+def _portfolio_markup(url: str):
+    safe_href = escape(url, quote = True)
+    safe_text = escape(url)
+    return f'<link href="{safe_href}" color="blue">{safe_text}</link>'
+
+
+def _plain_text_markup(value: str):
+    return escape(value).replace('\n', '<br />')
 
 
 class Curriculum:
@@ -159,10 +170,10 @@ class Curriculum:
         if location: self.__add(location.location, spacer = 3)
 
         portfolio_url = _sanitize_portfolio_url(self.filters.get('portfolio_url'))
-        if portfolio_url: self.__add(portfolio_url, spacer = 3)
+        if portfolio_url: self.__add(_portfolio_markup(portfolio_url), spacer = 3)
 
         whatsapp = _format_whatsapp(profile.whatsapp) if profile.whatsapp else ''
-        if profile.email: self.__add(profile.email, spacer = 3)
+        if profile.email: self.__add(escape(profile.email), spacer = 3)
         if whatsapp: self.__add(f'{whatsapp} <font size="8">(Somente mensagens via WhatsApp)</font>', spacer = 3)
 
         self.__add('<br />')
@@ -174,17 +185,18 @@ class Curriculum:
 
         override = self.filters.get('summary')
         if override is not None:
-            about_me = str(override).strip()
+            about_me = _plain_text_markup(str(override).strip())
         else:
             profile = await self.__load_profile()
             picked = [t for t in profile.translations if t.locale == 'pt']
             translation = picked[0] if picked else None
-            about_me = translation.about_me if translation else None
+            raw_about = translation.about_me if translation else None
+            about_me = _plain_text_markup(raw_about) if raw_about else None
 
         if not about_me: return
 
         self.__add('<b>Resumo Profissional</b>', 'SectionTitle')
-        self.__add(about_me.replace('\n', '<br />'))
+        self.__add(about_me)
         self.__add('<br />')
 
 

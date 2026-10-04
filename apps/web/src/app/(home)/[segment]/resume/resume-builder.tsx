@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Download, Loader2, RefreshCw, Sparkles } from "lucide-react"
+import { Download, Info, Loader2, RefreshCw, Sparkles } from "lucide-react"
 
 import { API } from "@/api/client"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,6 @@ import {
   buildResumeQuery,
   defaultResumeFilters,
   experienceRolesFromOverrides,
-  resumePdfBody,
   uniqueLanguagesFromFrameworks,
   type ResumeFilterState,
 } from "@/lib/resume-filters"
@@ -88,15 +87,15 @@ export function ResumeBuilder({
   const [pendingHeaderSaves, setPendingHeaderSaves] = useState<number[]>([])
   const [missingSkills, setMissingSkills] = useState<{ name: string }[]>([])
   const [filtersFromAi, setFiltersFromAi] = useState(false)
+  const [matchPercent, setMatchPercent] = useState<number | null>(null)
+  const [matchRationale, setMatchRationale] = useState<string | null>(null)
   const [suggestionsOpen, setSuggestionsOpen] = useState(false)
   const [addingName, setAddingName] = useState<string | null>(null)
   const [regeneratingSummary, setRegeneratingSummary] = useState(false)
   const [savingKey, setSavingKey] = useState<string | null>(null)
-  const [generatingPdf, setGeneratingPdf] = useState(false)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
-  const [pdfError, setPdfError] = useState<string | null>(null)
   const [portfolioUrl, setPortfolioUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -128,10 +127,24 @@ export function ResumeBuilder({
   }, [experiences])
 
   const downloadUrl = useMemo(() => {
-    const query = buildResumeQuery(filters, portfolioUrl)
+    const query = buildResumeQuery(filters, portfolioUrl, {
+      includeSummary: canMutate ? includeSummary : true,
+      summary: canMutate ? summaryOverride : null,
+      experienceRoles: canMutate ? experienceRoles : [],
+      headerRoleIds: canMutate ? headerRoleIds : null,
+    })
     const base = `${apiBaseUrl.replace(/\/$/, "")}/landpage/resume`
     return query ? `${base}?${query}` : base
-  }, [apiBaseUrl, filters, portfolioUrl])
+  }, [
+    apiBaseUrl,
+    canMutate,
+    experienceRoles,
+    filters,
+    headerRoleIds,
+    includeSummary,
+    portfolioUrl,
+    summaryOverride,
+  ])
 
   function handleSkillCreated(skill: Skill) {
     setSkills((current) => {
@@ -409,44 +422,6 @@ export function ResumeBuilder({
     }
   }
 
-  async function generatePdfAuthenticated() {
-    setGeneratingPdf(true)
-    setPdfError(null)
-    const tab = window.open("about:blank", "_blank")
-
-    try {
-      const response = await API.post(
-        "/landpage/resume",
-        resumePdfBody(filters, {
-          includeSummary,
-          summary: summaryOverride,
-          experienceRoles,
-          headerRoleIds,
-          portfolioUrl,
-        }),
-      )
-      if (!response.ok) {
-        tab?.close()
-        setPdfError(t.resume.generatePdfError)
-        return
-      }
-
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      if (tab) {
-        tab.location.href = url
-      } else {
-        window.location.assign(url)
-      }
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
-    } catch {
-      tab?.close()
-      setPdfError(t.resume.generatePdfError)
-    } finally {
-      setGeneratingPdf(false)
-    }
-  }
-
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-2">
       <div className="space-y-4">
@@ -456,6 +431,38 @@ export function ResumeBuilder({
               <h2 className="flex items-center gap-2 text-sm font-semibold">
                 <Sparkles className="size-4 text-primary" />
                 {t.resume.ai.toolsTitle}
+                {matchPercent != null ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span
+                      className={
+                        matchPercent >= 75
+                          ? "rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+                          : matchPercent >= 50
+                            ? "rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400"
+                            : "rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive"
+                      }
+                    >
+                      {t.resume.ai.matchBadge.replace("{percent}", String(matchPercent))}
+                    </span>
+                    {matchRationale ? (
+                      <span className="group relative inline-flex">
+                        <button
+                          type="button"
+                          className="inline-flex rounded-full text-muted-foreground outline-none ring-primary/40 hover:text-foreground focus-visible:ring-2"
+                          aria-label={t.resume.ai.matchBadgeHint}
+                        >
+                          <Info className="size-3.5" />
+                        </button>
+                        <span
+                          role="tooltip"
+                          className="pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 w-56 -translate-x-1/2 rounded-lg border border-border/60 bg-popover px-2.5 py-2 text-left text-xs font-normal leading-relaxed text-popover-foreground opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:w-64"
+                        >
+                          {matchRationale}
+                        </span>
+                      </span>
+                    ) : null}
+                  </span>
+                ) : null}
               </h2>
               <Button
                 type="button"
@@ -494,6 +501,8 @@ export function ResumeBuilder({
                 onApplyExperienceRoles={applyExperienceRoles}
                 onApplyHeaderRoles={applyHeaderRoles}
                 onMissingSkills={setMissingSkills}
+                onMatchPercent={setMatchPercent}
+                onMatchRationale={setMatchRationale}
                 onRegenerateSummary={regenerateSummary}
               />
             </div>
@@ -602,26 +611,12 @@ export function ResumeBuilder({
           </div>
         </Reveal>
 
-        {canMutate ? (
-          <Button
-            type="button"
-            className="rounded-full"
-            onClick={generatePdfAuthenticated}
-            disabled={generatingPdf}
-          >
-            {generatingPdf ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+        <Button asChild className="rounded-full">
+          <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
+            <Download className="size-4" />
             {t.resume.generatePdf}
-          </Button>
-        ) : (
-          <Button asChild className="rounded-full">
-            <a href={downloadUrl} target="_blank" rel="noopener noreferrer">
-              <Download className="size-4" />
-              {t.resume.generatePdf}
-            </a>
-          </Button>
-        )}
-
-        {pdfError ? <p className="text-xs text-destructive">{pdfError}</p> : null}
+          </a>
+        </Button>
       </aside>
     </div>
   )

@@ -24,8 +24,8 @@ async def resume_pdf(filters: dict, is_auth: bool = False):
 
 
 @router.get('/resume', status_code = 200)
-async def get_resume(sections: Optional[str] = Query(None), skill_ids: Optional[str] = Query(None), tool_ids: Optional[str] = Query(None), experience_ids: Optional[str] = Query(None), framework_ids: Optional[str] = Query(None), language_ids: Optional[str] = Query(None), database_ids: Optional[str] = Query(None), include_tools: bool = Query(False), include_summary: bool = Query(True), portfolio_url: Optional[str] = Query(None), is_auth: bool = Depends(partial_authenticated)):
-    filters = parse_resume_query(sections, skill_ids, tool_ids, experience_ids, framework_ids, language_ids, database_ids, include_tools, include_summary, portfolio_url)
+async def get_resume(sections: Optional[str] = Query(None), skill_ids: Optional[str] = Query(None), tool_ids: Optional[str] = Query(None), experience_ids: Optional[str] = Query(None), framework_ids: Optional[str] = Query(None), language_ids: Optional[str] = Query(None), database_ids: Optional[str] = Query(None), include_tools: bool = Query(False), include_summary: bool = Query(True), portfolio_url: Optional[str] = Query(None), summary: Optional[str] = Query(None), experience_roles: Optional[str] = Query(None), header_role_ids: Optional[str] = Query(None), is_auth: bool = Depends(partial_authenticated)):
+    filters = parse_resume_query(sections, skill_ids, tool_ids, experience_ids, framework_ids, language_ids, database_ids, include_tools, include_summary, portfolio_url, summary, experience_roles, header_role_ids)
     return await resume_pdf(filters, is_auth = is_auth)
 
 

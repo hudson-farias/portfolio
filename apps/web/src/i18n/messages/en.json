@@ -226,6 +226,8 @@
       "analyze": "Analyze job",
       "analyzing": "Analyzing…",
       "analyzeError": "Could not analyze the job posting.",
+      "matchBadge": "{percent}% match",
+      "matchBadgeHint": "AI-estimated fit with the analyzed job posting",
       "missingSkills": "Missing skills",
       "addSkill": "Add",
       "addingSkill": "Adding…",
