@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
+import { Reveal } from "@/themes/default/reveal"
 import { cn } from "@/lib/utils"
 import { FRAMEWORK_SCOPES, frameworkScopeEmpty, siteFrameworkScopeLabel, type FrameworkScopeValue } from "@/lib/framework-scope"
-import type { Framework } from "@/types"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Framework } from "@/themes/types"
 
 const tileClassName =
   "surface surface-tile flex min-h-[88px] flex-col items-center justify-center rounded-xl p-3 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md"
@@ -36,8 +36,15 @@ function SegmentedSwitch<T extends string>({ value, options, onChange }: { value
   )
 }
 
-export function FrameworksView({ frameworks }: { frameworks: Framework[] }) {
-  const { t } = useSiteLocale()
+export function FrameworksView({
+  frameworks,
+  copy,
+  common,
+}: {
+  frameworks: Framework[]
+  copy: Dictionary["frameworks"]
+  common: Dictionary["common"]
+}) {
   const availableScopes = useMemo(
     () => FRAMEWORK_SCOPES.filter((scope) => frameworks.some((framework) => framework.scope === scope)),
     [frameworks],
@@ -56,18 +63,18 @@ export function FrameworksView({ frameworks }: { frameworks: Framework[] }) {
 
   const scopeOptions = availableScopes.map((value) => ({
     value,
-    label: siteFrameworkScopeLabel(value, t.common) ?? value,
+    label: siteFrameworkScopeLabel(value, common) ?? value,
   }))
 
   if (frameworks.length === 0) {
-    return <p className="text-center text-muted-foreground">{t.frameworks.empty}</p>
+    return <p className="text-center text-muted-foreground">{copy.empty}</p>
   }
 
   if (availableScopes.length === 0) {
-    return <p className="text-center text-muted-foreground">{t.frameworks.empty}</p>
+    return <p className="text-center text-muted-foreground">{copy.empty}</p>
   }
 
-  const emptyLabel = frameworkScopeEmpty(effectiveScope, t.frameworks)
+  const emptyLabel = frameworkScopeEmpty(effectiveScope, copy)
 
   return (
     <div className="space-y-8">
@@ -78,7 +85,7 @@ export function FrameworksView({ frameworks }: { frameworks: Framework[] }) {
       {items.length > 0 ? (
         <div className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2">
           {items.map((framework, index) => {
-            const scopeLabel = siteFrameworkScopeLabel(framework.scope ?? null, t.common)
+            const scopeLabel = siteFrameworkScopeLabel(framework.scope ?? null, common)
             const languages = framework.languages.map((language) => language.name).join(", ")
             const title = [framework.name, scopeLabel, languages].filter(Boolean).join(" — ")
 

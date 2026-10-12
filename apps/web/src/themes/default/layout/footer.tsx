@@ -3,10 +3,10 @@
 import Link from "next/link"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
 import { formatSocialAriaLabel } from "@/lib/social-label"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { FooterResponse } from "@/app/(home)/[segment]/layout.interfaces"
+import type { FooterProps, FooterResponse } from "@/themes/types"
+
+import { Reveal } from "../reveal"
 
 type FooterLink = {
   key: string
@@ -53,28 +53,11 @@ export const Footer = ({
   profileName,
   profileTagline,
   footer,
-}: {
-  profileName: string
-  profileTagline: string
-  footer: FooterResponse
-}) => {
-  const { t, routes } = useSiteLocale()
+  copy,
+  pageLinks,
+  stackLinks,
+}: FooterProps) => {
   const links = buildFooterLinks(footer)
-
-  const footerPageLinks = [
-    { label: t.footerLinks.about, href: routes.home },
-    { label: t.footerLinks.tools, href: routes.tools },
-    { label: t.footerLinks.experience, href: routes.experience },
-    { label: t.footerLinks.projects, href: routes.projects },
-    { label: t.footerLinks.resume, href: routes.resume },
-    { label: t.footerLinks.contact, href: routes.contact },
-  ]
-
-  const footerStackLinks = [
-    { label: t.footerLinks.frameworks, href: routes.frameworks },
-    { label: t.footerLinks.databases, href: routes.databases },
-    { label: t.footerLinks.skills, href: routes.skills },
-  ]
 
   return (
     <footer className="mt-20 border-t">
@@ -84,28 +67,28 @@ export const Footer = ({
             <p className="text-lg font-semibold">{profileName}</p>
             <p className="text-sm text-muted-foreground">{profileTagline}</p>
             <p className="text-sm text-muted-foreground">
-              © {footer.career_start} — {new Date().getFullYear()} {profileName}. {t.footer.rights}
+              © {footer.career_start} — {new Date().getFullYear()} {profileName}. {copy.rights}
             </p>
           </div>
         </Reveal>
 
         <Reveal variant="fade-up" delay={80}>
           <div>
-            <p className="mb-3 text-sm font-medium">{t.footer.pages}</p>
-            <FooterLinkList links={footerPageLinks} />
+            <p className="mb-3 text-sm font-medium">{copy.pages}</p>
+            <FooterLinkList links={pageLinks} />
           </div>
         </Reveal>
 
         <Reveal variant="fade-up" delay={120}>
           <div>
-            <p className="mb-3 text-sm font-medium">{t.footer.stack}</p>
-            <FooterLinkList links={footerStackLinks} />
+            <p className="mb-3 text-sm font-medium">{copy.stack}</p>
+            <FooterLinkList links={stackLinks} />
           </div>
         </Reveal>
 
         <Reveal variant="fade-up" delay={160}>
           <div>
-            <p className="mb-3 text-sm font-medium">{t.footer.networks}</p>
+            <p className="mb-3 text-sm font-medium">{copy.networks}</p>
             {links.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {links.map((link, i) => (

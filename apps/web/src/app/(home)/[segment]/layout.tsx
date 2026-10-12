@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { Footer } from "@/app/(home)/[segment]/_ui/layout/footer"
-import { Header } from "@/app/(home)/[segment]/_ui/layout/header"
+import { Footer } from "@/themes/default/layout/footer"
+import { themes } from "@/themes"
 import { getDictionary } from "@/i18n/get-dictionary"
 import type { Locale } from "@/i18n/locales"
 import { localizedRoutes } from "@/i18n/routes"
@@ -12,9 +12,9 @@ import { getRequestOrigin } from "@/lib/request-origin"
 
 import type { LayoutResponse } from "./layout.interfaces"
 import { generateLandpageMetadata } from "./metadata"
+import { ThemeHeader } from "./theme-header"
 
 export const generateStaticParams = generateSegmentStaticParams
-
 
 const JsonLd = async ({ locale }: { locale: Locale }) => {
   const siteUrl = await getRequestOrigin()
@@ -63,19 +63,66 @@ export default async function SegmentLayout({ children, params }: { children: Re
   const { footer, hero }: LayoutResponse = await response.json()
   const routes = localizedRoutes(locale)
 
+  const navItems = [
+    { label: t.nav.about, href: routes.home },
+    { label: t.nav.experience, href: routes.experience },
+    { label: t.nav.projects, href: routes.projects },
+    { label: t.nav.frameworks, href: routes.frameworks },
+    { label: t.nav.databases, href: routes.databases },
+    { label: t.nav.tools, href: routes.tools },
+    { label: t.nav.skills, href: routes.skills },
+    { label: t.nav.contact, href: routes.contact },
+  ]
+
+  const pageLinks = [
+    { label: t.footerLinks.about, href: routes.home },
+    { label: t.footerLinks.tools, href: routes.tools },
+    { label: t.footerLinks.experience, href: routes.experience },
+    { label: t.footerLinks.projects, href: routes.projects },
+    { label: t.footerLinks.resume, href: routes.resume },
+    { label: t.footerLinks.contact, href: routes.contact },
+  ]
+
+  const stackLinks = [
+    { label: t.footerLinks.frameworks, href: routes.frameworks },
+    { label: t.footerLinks.databases, href: routes.databases },
+    { label: t.footerLinks.skills, href: routes.skills },
+  ]
+
+  const uiThemes = themes.map((theme) => ({
+    id: theme.id,
+    label: theme.label,
+  }))
+
   return (
     <>
       <JsonLd locale={locale} />
 
       <SiteLocaleProvider locale={locale} t={t} routes={routes}>
         <div className="flex min-h-screen w-full flex-col">
-          <Header />
+          <ThemeHeader
+            homeHref={routes.home}
+            homeAriaLabel={t.nav.home}
+            navItems={navItems}
+            locale={locale}
+            adminHref="/admin"
+            adminLabel={t.nav.admin}
+            uiThemes={uiThemes}
+            selectedThemeId="default"
+          />
 
           <main className="mx-auto flex w-full max-w-6xl flex-col gap-24 px-6 py-10 md:px-10 md:py-14">
             {children}
           </main>
 
-          <Footer profileName={hero.profile.name} profileTagline={hero.profile.about} footer={footer} />
+          <Footer
+            profileName={hero.profile.name}
+            profileTagline={hero.profile.about}
+            footer={footer}
+            copy={t.footer}
+            pageLinks={pageLinks}
+            stackLinks={stackLinks}
+          />
         </div>
       </SiteLocaleProvider>
     </>

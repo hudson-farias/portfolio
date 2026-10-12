@@ -25,9 +25,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@home/ui/*": [
-        "./src/app/(home)/[segment]/_ui/*"
       ]
     }
   },

@@ -77,8 +77,9 @@ app/(home)/
     page.tsx
     contact/page.tsx + contact/interfaces.ts
     …
-  _ui/                   → blocos visuais reutilizáveis
 ```
+
+Blocos visuais reutilizáveis vivem em `src/themes/default/` (não em `_ui`).
 
 | Arquivo | Tipos |
 |---------|-------|

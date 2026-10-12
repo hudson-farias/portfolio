@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { StackSkillsView } from "@/app/(home)/[segment]/_ui/page/stack-skills-view"
+import { StackSkillsView } from "@/themes/default/page/stack-skills-view"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { SkillsResponse } from "./interfaces"
@@ -19,7 +20,7 @@ export default async function SkillsRoutePage({ params }: { params: Promise<{ se
   return (
     <div className="space-y-10">
       <PageIntro title={t.skillsPage.title} description={t.skillsPage.description} />
-      <StackSkillsView skills={skills} />
+      <StackSkillsView skills={skills} copy={{ empty: t.skillsPage.empty }} />
     </div>
   )
 }
@@ -30,5 +31,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.skillsPage.meta.title,
     description: t.skillsPage.meta.description,
+    ...(await localizedPageSeo(locale, "/skills")),
   }
 }

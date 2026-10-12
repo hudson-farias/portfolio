@@ -2,27 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
-import { Reveal } from "../reveal"
-import { FrameworkBadges } from "../framework-badges"
+import { Reveal } from "@/themes/default/reveal"
+import { FrameworkBadges } from "@/themes/default/framework-badges"
 import { AppIcon } from "@/components/icons/app-icon"
 import { Button } from "@/components/ui/button"
-import { SectionCta } from "../section-cta"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { Project } from "@/types"
+import { SectionCta } from "@/themes/default/section-cta"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Project, ProjectsCopy } from "@/themes/types"
 
 const GAP_PX = 16
 const TRAILING_PX = 32
 
+type ProjectsCommonCopy = Pick<Dictionary["common"], "noDescription" | "repository" | "demo">
+
 function ProjectCard({
   project,
+  common,
   cardWidth,
   className = "",
 }: {
   project: Project
+  common: ProjectsCommonCopy
   cardWidth?: number
   className?: string
 }) {
-  const { t } = useSiteLocale()
   const title = project.description
     ? `${project.name} — ${project.description}`
     : project.name
@@ -49,7 +52,7 @@ function ProjectCard({
         <div className="space-y-2 sm:space-y-3">
           <h3 className="text-lg font-semibold sm:text-xl">{project.name}</h3>
           <p className="line-clamp-4 text-sm leading-relaxed text-muted-foreground">
-            {project.description || t.common.noDescription}
+            {project.description || common.noDescription}
           </p>
           {project.frameworks?.length ? (
             <div className="pt-2">
@@ -67,7 +70,7 @@ function ProjectCard({
               className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <AppIcon name="github" className="size-4" />
-              {t.common.repository}
+              {common.repository}
             </a>
           )}
           {project.homepage && (
@@ -78,7 +81,7 @@ function ProjectCard({
               className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium transition-colors hover:underline"
             >
               <ExternalLink className="size-4" />
-              {t.common.demo}
+              {common.demo}
             </a>
           )}
         </div>
@@ -89,6 +92,8 @@ function ProjectCard({
 
 export const Projects = ({
   projects,
+  copy,
+  common,
   limit,
   ctaHref,
   ctaLabel,
@@ -96,20 +101,21 @@ export const Projects = ({
   embedded = false,
 }: {
   projects: Project[]
+  copy: ProjectsCopy
+  common: ProjectsCommonCopy
   limit?: number
   ctaHref?: string
   ctaLabel?: string
   layout?: "carousel" | "grid"
   embedded?: boolean
 }) => {
-  const { t } = useSiteLocale()
   const visibleProjects = limit ? projects.slice(0, limit) : projects
-  const resolvedCtaLabel = ctaLabel ?? t.projects.ctaAll
+  const resolvedCtaLabel = ctaLabel ?? copy.ctaAll
 
   const heading = (
     <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.projects.title}</h2>
-      <p className="text-muted-foreground">{t.projects.description}</p>
+      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+      <p className="text-muted-foreground">{copy.description}</p>
     </Reveal>
   )
   const [activePage, setActivePage] = useState(0)
@@ -213,8 +219,8 @@ export const Projects = ({
     return (
       <section id="projects" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
         <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.projects.title}</h2>
-          <p className="text-muted-foreground">{t.projects.empty}</p>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+          <p className="text-muted-foreground">{copy.empty}</p>
         </Reveal>
       </section>
     )
@@ -228,7 +234,7 @@ export const Projects = ({
         <div className="mx-auto grid w-full max-w-4xl gap-4 md:grid-cols-2">
             {visibleProjects.map((project, index) => (
               <Reveal key={`${project.id}-${index}`} variant="scale" delay={80 + index * 60}>
-              <ProjectCard project={project} />
+              <ProjectCard project={project} common={common} />
             </Reveal>
           ))}
         </div>
@@ -281,6 +287,7 @@ export const Projects = ({
               <ProjectCard
                 key={`${project.id}-${index}`}
                 project={project}
+                common={common}
                 cardWidth={cardWidth}
                 className="flex-none snap-start"
               />

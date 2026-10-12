@@ -1,13 +1,18 @@
 "use client"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
-import { SectionCta } from "../section-cta"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { Tool } from "@/types"
+import { Reveal } from "@/themes/default/reveal"
+import { SectionCta } from "@/themes/default/section-cta"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Tool, ToolsCopy } from "@/themes/types"
 
-function ToolCard({ tool }: { tool: Tool }) {
-  const { t } = useSiteLocale()
+function ToolCard({
+  tool,
+  opensInNewTab,
+}: {
+  tool: Tool
+  opensInNewTab: string
+}) {
   const content = (
     <>
       <AppIcon name={tool.icon} className="size-6" />
@@ -29,7 +34,7 @@ function ToolCard({ tool }: { tool: Tool }) {
         rel="noopener noreferrer"
         className={interactiveClassName}
         title={tool.name}
-        aria-label={`${tool.name} ${t.common.opensInNewTab}`}
+        aria-label={`${tool.name} ${opensInNewTab}`}
       >
         {content}
       </a>
@@ -41,33 +46,36 @@ function ToolCard({ tool }: { tool: Tool }) {
 
 export const Tools = ({
   tools,
+  copy,
+  common,
   limit,
   ctaHref,
   ctaLabel,
   embedded = false,
 }: {
   tools: Tool[]
+  copy: ToolsCopy
+  common: Pick<Dictionary["common"], "opensInNewTab">
   limit?: number
   ctaHref?: string
   ctaLabel?: string
   embedded?: boolean
 }) => {
-  const { t } = useSiteLocale()
   const visibleTools = limit ? tools.slice(0, limit) : tools
-  const resolvedCtaLabel = ctaLabel ?? t.tools.ctaAll
+  const resolvedCtaLabel = ctaLabel ?? copy.ctaAll
 
   const heading = (
     <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.tools.title}</h2>
-      <p className="text-muted-foreground">{t.tools.description}</p>
+      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+      <p className="text-muted-foreground">{copy.description}</p>
     </Reveal>
   )
   if (tools.length === 0) {
     return (
       <section id="tools" className="relative isolate z-0 overflow-hidden scroll-mt-28 space-y-10">
         <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.tools.title}</h2>
-          <p className="text-muted-foreground">{t.tools.empty}</p>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+          <p className="text-muted-foreground">{copy.empty}</p>
         </Reveal>
       </section>
     )
@@ -81,7 +89,7 @@ export const Tools = ({
         <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-4 px-6 sm:grid-cols-3 md:grid-cols-4 md:px-10 lg:grid-cols-5">
           {visibleTools.map((tool, index) => (
             <Reveal key={tool.id} variant="scale" delay={80 + index * 60}>
-              <ToolCard tool={tool} />
+              <ToolCard tool={tool} opensInNewTab={common.opensInNewTab} />
             </Reveal>
           ))}
         </div>

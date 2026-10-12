@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { Projects } from "@/app/(home)/[segment]/_ui/page/projects"
+import { Projects } from "@/themes/default/page/projects"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { ProjectsResponse } from "./interfaces"
@@ -19,7 +20,17 @@ export default async function ProjectsRoutePage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-10">
       <PageIntro title={t.projects.title} description={t.projects.description} />
-      <Projects projects={projects} layout="grid" embedded />
+      <Projects
+        projects={projects}
+        copy={t.projects}
+        common={{
+          noDescription: t.common.noDescription,
+          repository: t.common.repository,
+          demo: t.common.demo,
+        }}
+        layout="grid"
+        embedded
+      />
     </div>
   )
 }
@@ -30,5 +41,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.projects.meta.title,
     description: t.projects.meta.description,
+    ...(await localizedPageSeo(locale, "/projects")),
   }
 }

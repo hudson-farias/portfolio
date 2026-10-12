@@ -3,9 +3,8 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Download, MapPin } from "lucide-react"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
 import { Button } from "@/components/ui/button"
-import type { HeroProfile } from "@/app/(home)/[segment]/interfaces"
+import type { HeroCopy, HeroProfile } from "@/themes/types"
 
 const TYPE_MS = 100
 const DELETE_MS = 55
@@ -63,8 +62,17 @@ const TypingRoles = ({ roles }: { roles: string[] }) => {
 
 const isAvailabilityRole = (role: string) => /^(disponível|available)/i.test(role.trim())
 
-export const Hero = ({ profile }: { profile: HeroProfile }) => {
-  const { t, routes } = useSiteLocale()
+export const Hero = ({
+  profile,
+  copy,
+  contactHref,
+  resumeHref,
+}: {
+  profile: HeroProfile
+  copy: HeroCopy
+  contactHref: string
+  resumeHref: string
+}) => {
   const firstName = profile.name.trim().split(/\s+/)[0]
   const roles = useMemo(() => {
     if (!profile.available) return profile.roles
@@ -79,13 +87,13 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
         {profile.available && (
           <p className="surface cursor-default land-fade-up inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm text-muted-foreground">
             <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
-            {t.hero.available}
+            {copy.available}
           </p>
         )}
 
         <div className="space-y-4">
           <h1 className="land-fade-up land-delay-100 text-4xl font-bold tracking-tight md:text-6xl">
-            {t.hero.greeting.replace("{name}", firstName)}
+            {copy.greeting.replace("{name}", firstName)}
           </h1>
           <div className="land-fade-up land-delay-200">
             <TypingRoles roles={roles} />
@@ -105,15 +113,15 @@ export const Hero = ({ profile }: { profile: HeroProfile }) => {
 
         <div className="land-fade-up land-delay-500 flex flex-wrap gap-3">
           <Button asChild size="lg" className="rounded-full px-6 transition-transform hover:scale-[1.02]">
-            <Link href={routes.contact}>
-              {t.hero.ctaContact}
+            <Link href={contactHref}>
+              {copy.ctaContact}
               <ArrowRight />
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="rounded-full px-6 transition-transform hover:scale-[1.02]">
-            <Link href={routes.resume}>
+            <Link href={resumeHref}>
               <Download />
-              {t.hero.ctaResume}
+              {copy.ctaResume}
             </Link>
           </Button>
         </div>

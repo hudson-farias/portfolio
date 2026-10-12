@@ -1,14 +1,12 @@
 "use client"
 
 import { Send } from "lucide-react"
-import { Reveal } from "../reveal"
+import { Reveal } from "@/themes/default/reveal"
 import { Button } from "@/components/ui/button"
 import { AppIcon } from "@/components/icons/app-icon"
 import { formatSocialAriaLabel, socialNetworkLabel } from "@/lib/social-label"
 import { cn } from "@/lib/utils"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { ContactResponse } from "@/app/(home)/[segment]/interfaces"
-import type { Dictionary } from "@/i18n/dictionary"
+import type { ContactCopy, ContactResponse } from "@/themes/types"
 
 const fieldClass =
   "w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
@@ -31,7 +29,7 @@ function linkSubtitle(url: string) {
   }
 }
 
-function buildContactChannels(contact: ContactResponse, labels: Dictionary["contact"]): ContactChannelItem[] {
+function buildContactChannels(contact: ContactResponse, labels: ContactCopy): ContactChannelItem[] {
   const channels: ContactChannelItem[] = [
     {
       key: "email",
@@ -116,21 +114,22 @@ function ContactChannel({
 
 export const Contact = ({
   contact,
+  copy,
   embedded = false,
 }: {
   contact: ContactResponse
+  copy: ContactCopy
   embedded?: boolean
 }) => {
-  const { t } = useSiteLocale()
-  const channels = buildContactChannels(contact, t.contact)
+  const channels = buildContactChannels(contact, copy)
 
   const content = (
     <Reveal variant="scale" duration={700}>
       <div className="surface cursor-default rounded-3xl px-6 py-10 md:px-10 md:py-12">
         {!embedded ? (
           <Reveal variant="fade-up" className="mx-auto max-w-2xl space-y-3 text-center md:max-w-none md:text-left">
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.contact.title}</h2>
-            <p className="text-muted-foreground">{t.contact.description}</p>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+            <p className="text-muted-foreground">{copy.description}</p>
           </Reveal>
         ) : null}
 
@@ -147,31 +146,31 @@ export const Contact = ({
                 onSubmit={(event) => event.preventDefault()}
                 aria-disabled
               >
-                <ContactField label={t.contact.name}>
+                <ContactField label={copy.name}>
                   <input
                     className={fieldClass}
                     type="text"
                     name="name"
-                    placeholder={t.contact.namePlaceholder}
+                    placeholder={copy.namePlaceholder}
                     disabled
                   />
                 </ContactField>
 
-                <ContactField label={t.contact.email}>
+                <ContactField label={copy.email}>
                   <input
                     className={fieldClass}
                     type="email"
                     name="email"
-                    placeholder={t.contact.emailPlaceholder}
+                    placeholder={copy.emailPlaceholder}
                     disabled
                   />
                 </ContactField>
 
-                <ContactField label={t.contact.message}>
+                <ContactField label={copy.message}>
                   <textarea
                     className={cn(fieldClass, "min-h-32 resize-y")}
                     name="message"
-                    placeholder={t.contact.messagePlaceholder}
+                    placeholder={copy.messagePlaceholder}
                     disabled
                   />
                 </ContactField>
@@ -179,16 +178,16 @@ export const Contact = ({
                 <div className="space-y-2 pt-1">
                   <Button type="submit" className="w-full gap-2 rounded-full sm:w-auto" disabled>
                     <Send className="size-4" />
-                    {t.contact.submit}
+                    {copy.submit}
                   </Button>
-                  <p className="text-xs text-muted-foreground">{t.contact.formDisabled}</p>
+                  <p className="text-xs text-muted-foreground">{copy.formDisabled}</p>
                 </div>
               </form>
             </Reveal>
 
             {channels.length > 0 && (
               <Reveal variant="fade-up" delay={200} className="space-y-3">
-                <p className="text-sm font-medium">{t.contact.otherChannels}</p>
+                <p className="text-sm font-medium">{copy.otherChannels}</p>
                 <div className="space-y-2">
                   {channels.map((channel, i) => (
                     <Reveal key={channel.key} variant="scale" delay={220 + i * 60}>

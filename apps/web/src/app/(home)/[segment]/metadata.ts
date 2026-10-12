@@ -4,16 +4,37 @@ import { API } from "@/api/server"
 import { getRequestOrigin } from "@/lib/request-origin"
 import type { Locale } from "@/i18n/locales"
 import { localeToOpenGraph } from "@/i18n/locales"
+import {
+  buildAlternateLocales,
+  buildLanguageAlternates,
+  buildLocalizedUrl,
+  type PathSuffix,
+} from "@/i18n/seo"
 
 import type { MetadataResponse } from "./layout.interfaces"
 
-export const generateLandpageMetadata = async (locale: Locale): Promise<Metadata> => {
+export const generateLandpageMetadata = async (
+  locale: Locale,
+  pathSuffix: PathSuffix = "",
+): Promise<Metadata> => {
   const siteUrl = await getRequestOrigin()
+  const pageUrl = buildLocalizedUrl(siteUrl, locale, pathSuffix)
+  const languages = buildLanguageAlternates(siteUrl, pathSuffix)
 
   const fallback: Metadata = {
     metadataBase: new URL(siteUrl),
     title: "Portfólio",
     description: "Portfólio pessoal com projetos, habilidades e contato.",
+    alternates: {
+      canonical: pageUrl,
+      languages,
+    },
+    openGraph: {
+      type: "website",
+      locale: localeToOpenGraph(locale),
+      alternateLocale: buildAlternateLocales(locale),
+      url: pageUrl,
+    },
   }
 
   const response = await API.get("/landpage/metadata", { locale })
@@ -35,7 +56,8 @@ export const generateLandpageMetadata = async (locale: Locale): Promise<Metadata
     openGraph: {
       type: "website",
       locale: localeToOpenGraph(locale),
-      url: siteUrl,
+      alternateLocale: buildAlternateLocales(locale),
+      url: pageUrl,
       siteName: metadata.name,
       title,
       description,
@@ -46,7 +68,8 @@ export const generateLandpageMetadata = async (locale: Locale): Promise<Metadata
       description,
     },
     alternates: {
-      canonical: siteUrl,
+      canonical: pageUrl,
+      languages,
     },
   }
 }

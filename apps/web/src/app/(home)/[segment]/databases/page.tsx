@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { DatabasesView } from "@/app/(home)/[segment]/_ui/page/databases-view"
+import { DatabasesView } from "@/themes/default/page/databases-view"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { DatabasesResponse } from "./interfaces"
@@ -19,7 +20,11 @@ export default async function DatabasesRoutePage({ params }: { params: Promise<{
   return (
     <div className="space-y-10">
       <PageIntro title={t.databases.title} description={t.databases.description} />
-      <DatabasesView databases={databases} />
+      <DatabasesView
+        databases={databases}
+        copy={t.databases}
+        common={{ sql: t.common.sql, nosql: t.common.nosql }}
+      />
     </div>
   )
 }
@@ -30,5 +35,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.databases.meta.title,
     description: t.databases.meta.description,
+    ...(await localizedPageSeo(locale, "/databases")),
   }
 }

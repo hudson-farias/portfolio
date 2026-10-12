@@ -1,10 +1,9 @@
 "use client"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
+import { Reveal } from "@/themes/default/reveal"
 import { formatSocialAriaLabel } from "@/lib/social-label"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { AboutResponse, Stats } from "@/app/(home)/[segment]/interfaces"
+import type { AboutCopy, AboutResponse, AboutStats, SocialNetwork, Stats } from "@/themes/types"
 
 type AboutLink = {
   key: string
@@ -34,27 +33,28 @@ export const About = ({
   linkedin,
   socialNetworks,
   profileName,
+  copy,
 }: {
   aboutExtended: string
-  stats: Stats
+  stats: AboutStats | Stats
   linkedin: string
-  socialNetworks: AboutResponse["social_networks"]
+  socialNetworks: SocialNetwork[]
   profileName: string
+  copy: AboutCopy
 }) => {
-  const { t } = useSiteLocale()
   const links = buildAboutLinks({ linkedin, social_networks: socialNetworks })
 
   return (
     <section id="about" className="scroll-mt-28 space-y-12">
       <Reveal className="mx-auto max-w-3xl space-y-4 text-center">
-        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.about.title}</h2>
+        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
         <p className="text-lg leading-relaxed text-muted-foreground">{aboutExtended}</p>
       </Reveal>
 
       {links.length > 0 && (
         <div className="flex flex-wrap items-center justify-center gap-4 border-b pb-10">
           <Reveal variant="fade">
-            <span className="text-sm text-muted-foreground">{t.about.follow}</span>
+            <span className="text-sm text-muted-foreground">{copy.follow}</span>
           </Reveal>
           <div className="flex items-center gap-2">
             {links.map((link, i) => (
@@ -76,8 +76,8 @@ export const About = ({
 
       <div className="grid gap-6 pt-10 sm:grid-cols-2">
         {[
-          { value: `${String(stats.yearsExperience).padStart(2, "0")}+`, label: t.about.yearsExperience },
-          { value: String(stats.projectsCount).padStart(2, "0"), label: t.about.projectsInShowcase },
+          { value: `${String(stats.yearsExperience).padStart(2, "0")}+`, label: copy.yearsExperience },
+          { value: String(stats.projectsCount).padStart(2, "0"), label: copy.projectsInShowcase },
         ].map((stat, i) => (
           <Reveal key={stat.label} variant="scale" delay={i * 100} className="text-center">
             <p className="text-4xl font-bold tracking-tight">{stat.value}</p>

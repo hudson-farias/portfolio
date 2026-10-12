@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { Tools } from "@/app/(home)/[segment]/_ui/page/tools"
+import { Tools } from "@/themes/default/page/tools"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { ToolsResponse } from "./interfaces"
@@ -19,7 +20,12 @@ export default async function ToolsRoutePage({ params }: { params: Promise<{ seg
   return (
     <div className="space-y-10">
       <PageIntro title={t.toolsPage.title} description={t.toolsPage.description} />
-      <Tools tools={tools} embedded />
+      <Tools
+        tools={tools}
+        copy={t.tools}
+        common={{ opensInNewTab: t.common.opensInNewTab }}
+        embedded
+      />
     </div>
   )
 }
@@ -30,5 +36,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.toolsPage.meta.title,
     description: t.toolsPage.meta.description,
+    ...(await localizedPageSeo(locale, "/tools")),
   }
 }

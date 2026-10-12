@@ -3,12 +3,17 @@
 import { useMemo, useState } from "react"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
+import { Reveal } from "@/themes/default/reveal"
 import { cn } from "@/lib/utils"
-import type { Database } from "@/types"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Database } from "@/themes/types"
 
 type DatabaseScope = "sql" | "nosql"
+
+type DatabasesViewCopy = Pick<
+  Dictionary["databases"],
+  "empty" | "emptySql" | "emptyNosql"
+>
 
 const tileClassName =
   "surface surface-tile flex min-h-[100px] w-full flex-col items-center justify-center rounded-2xl p-4 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg"
@@ -57,8 +62,15 @@ function DatabaseTile({ database }: { database: Database }) {
   )
 }
 
-export function DatabasesView({ databases }: { databases: Database[] }) {
-  const { t } = useSiteLocale()
+export function DatabasesView({
+  databases,
+  copy,
+  common,
+}: {
+  databases: Database[]
+  copy: DatabasesViewCopy
+  common: Pick<Dictionary["common"], "sql" | "nosql">
+}) {
   const [scope, setScope] = useState<DatabaseScope>("sql")
 
   const hasSql = useMemo(
@@ -85,19 +97,19 @@ export function DatabasesView({ databases }: { databases: Database[] }) {
   )
 
   const scopeOptions = [
-    ...(hasSql ? [{ value: "sql" as const, label: t.common.sql }] : []),
-    ...(hasNosql ? [{ value: "nosql" as const, label: t.common.nosql }] : []),
+    ...(hasSql ? [{ value: "sql" as const, label: common.sql }] : []),
+    ...(hasNosql ? [{ value: "nosql" as const, label: common.nosql }] : []),
   ]
 
   if (databases.length === 0) {
-    return <p className="text-center text-muted-foreground">{t.databases.empty}</p>
+    return <p className="text-center text-muted-foreground">{copy.empty}</p>
   }
 
   if (!hasSql && !hasNosql) {
-    return <p className="text-center text-muted-foreground">{t.databases.empty}</p>
+    return <p className="text-center text-muted-foreground">{copy.empty}</p>
   }
 
-  const emptyLabel = effectiveScope === "sql" ? t.databases.emptySql : t.databases.emptyNosql
+  const emptyLabel = effectiveScope === "sql" ? copy.emptySql : copy.emptyNosql
 
   return (
     <div className="space-y-8">

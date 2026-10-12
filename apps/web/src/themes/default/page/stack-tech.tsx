@@ -5,29 +5,20 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
+import { Reveal } from "@/themes/default/reveal"
 import { cn } from "@/lib/utils"
-import type { Database } from "@/types"
-
-type DatabaseScope = "sql" | "nosql"
+import { FRAMEWORK_SCOPES, frameworkStackTechEmpty, siteFrameworkScopeLabel, type FrameworkScopeValue } from "@/lib/framework-scope"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Framework, StackCopy } from "@/themes/types"
 
 const tileClassName =
   "surface surface-tile flex min-h-[100px] w-full flex-col items-center justify-center rounded-2xl p-4 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-1 hover:border-foreground/20 hover:shadow-lg"
 
-function SegmentedSwitch<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T
-  options: { value: T; label: string }[]
-  onChange: (value: T) => void
-}) {
+function SegmentedSwitch<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
   if (options.length === 0) return null
 
   return (
-    <div className="inline-flex rounded-full border border-border/60 bg-card/40 p-1">
+    <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-border/60 bg-card/40 p-1">
       {options.map((option) => (
         <button
           key={option.value}
@@ -47,69 +38,74 @@ function SegmentedSwitch<T extends string>({
   )
 }
 
-function DatabaseTile({ database }: { database: Database }) {
-  const scope = database.scope === "sql" ? "SQL" : database.scope === "nosql" ? "NoSQL" : null
-  const title = scope ? `${database.name} — ${scope}` : database.name
+function FrameworkTile({
+  framework,
+  common,
+}: {
+  framework: Framework
+  common: Dictionary["common"]
+}) {
+  const languageHint = framework.languages.map((language) => language.name).join(" · ")
+  const scope = siteFrameworkScopeLabel(framework.scope ?? null, common)
+  const title = [framework.name, scope, languageHint].filter(Boolean).join(" — ")
 
   return (
     <article className={tileClassName} title={title}>
-      <AppIcon name={database.icon} className="size-6" />
-      <span className="mt-3 text-sm font-medium">{database.name}</span>
+      <AppIcon name={framework.icon} className="size-6" />
+      <span className="mt-3 text-sm font-medium">{framework.name}</span>
+      {languageHint ? (
+        <span className="mt-1 text-[11px] text-muted-foreground">{languageHint}</span>
+      ) : null}
     </article>
   )
 }
 
-export function StackDatabases({
-  databases,
+export function StackTech({
+  frameworks,
+  copy,
+  common,
+  frameworksHref,
   limit = 8,
 }: {
-  databases: Database[]
+  frameworks: Framework[]
+  copy: StackCopy
+  common: Dictionary["common"]
+  frameworksHref: string
   limit?: number
 }) {
-  const { t, routes } = useSiteLocale()
-  const [scope, setScope] = useState<DatabaseScope>("sql")
-
-  const hasSql = useMemo(
-    () => databases.some((database) => database.scope === "sql"),
-    [databases],
+  const availableScopes = useMemo(
+    () => FRAMEWORK_SCOPES.filter((scope) => frameworks.some((framework) => framework.scope === scope)),
+    [frameworks],
   )
-
-  const hasNosql = useMemo(
-    () => databases.some((database) => database.scope === "nosql"),
-    [databases],
-  )
+  const [scope, setScope] = useState<FrameworkScopeValue>(availableScopes[0] ?? "backend")
 
   const effectiveScope = useMemo(() => {
-    if (scope === "sql" && hasSql) return "sql"
-    if (scope === "nosql" && hasNosql) return "nosql"
-    if (hasSql) return "sql"
-    if (hasNosql) return "nosql"
-    return scope
-  }, [scope, hasSql, hasNosql])
+    if (availableScopes.includes(scope)) return scope
+    return availableScopes[0] ?? scope
+  }, [scope, availableScopes])
 
   const items = useMemo(
-    () => databases.filter((database) => database.scope === effectiveScope),
-    [databases, effectiveScope],
+    () => frameworks.filter((framework) => framework.scope === effectiveScope),
+    [frameworks, effectiveScope],
   )
 
   const visibleItems = items.slice(0, limit)
   const hasMore = items.length > limit
 
-  const scopeOptions = [
-    ...(hasSql ? [{ value: "sql" as const, label: t.common.sql }] : []),
-    ...(hasNosql ? [{ value: "nosql" as const, label: t.common.nosql }] : []),
-  ]
+  const scopeOptions = availableScopes.map((value) => ({
+    value,
+    label: siteFrameworkScopeLabel(value, common) ?? value,
+  }))
 
-  if (databases.length === 0) return null
-  if (!hasSql && !hasNosql) return null
+  if (frameworks.length === 0 || availableScopes.length === 0) return null
 
-  const emptyLabel = effectiveScope === "sql" ? t.stackDatabases.emptySql : t.stackDatabases.emptyNosql
+  const emptyLabel = frameworkStackTechEmpty(effectiveScope, copy)
 
   return (
-    <section id="stack-databases" className="relative isolate z-0 scroll-mt-28 space-y-10">
+    <section id="stack-tech" className="relative isolate z-0 scroll-mt-28 space-y-10">
       <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.stackDatabases.title}</h2>
-        <p className="text-muted-foreground">{t.stackDatabases.description}</p>
+        <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+        <p className="text-muted-foreground">{copy.description}</p>
       </Reveal>
 
       <Reveal delay={80}>
@@ -121,14 +117,14 @@ export function StackDatabases({
       {visibleItems.length > 0 ? (
         <Reveal delay={120}>
           <div className="mx-auto flex w-full max-w-6xl flex-wrap justify-center gap-4 px-6 md:px-10">
-            {visibleItems.map((database, index) => (
+            {visibleItems.map((framework, index) => (
               <Reveal
-                key={database.id}
+                key={framework.id}
                 variant="scale"
                 delay={80 + index * 60}
                 className="w-32 sm:w-36 md:w-40"
               >
-                <DatabaseTile database={database} />
+                <FrameworkTile framework={framework} common={common} />
               </Reveal>
             ))}
           </div>
@@ -143,10 +139,10 @@ export function StackDatabases({
         <Reveal delay={160}>
           <div className="flex justify-center">
             <Link
-              href={routes.databases}
+              href={frameworksHref}
               className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              {hasMore ? t.stackDatabases.ctaAll : t.stackDatabases.cta}
+              {hasMore ? copy.ctaAll : copy.cta}
               <ArrowRight className="size-4" />
             </Link>
           </div>

@@ -1,9 +1,9 @@
 "use client"
 
 import { AppIcon } from "@/components/icons/app-icon"
-import { Reveal } from "../reveal"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { Skill } from "@/types"
+import { Reveal } from "@/themes/default/reveal"
+import type { Dictionary } from "@/i18n/dictionary"
+import type { Skill } from "@/themes/types"
 
 const skillTileClassName =
   "surface surface-tile flex min-h-[72px] flex-col items-center justify-center rounded-xl p-2.5 text-center transition-[transform,colors,box-shadow] duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-md"
@@ -17,11 +17,15 @@ function SkillTile({ name, icon }: { name: string; icon: string }) {
   )
 }
 
-export function StackSkillsView({ skills }: { skills: Skill[] }) {
-  const { t } = useSiteLocale()
-
+export function StackSkillsView({
+  skills,
+  copy,
+}: {
+  skills: Skill[]
+  copy: Pick<Dictionary["skillsPage"], "empty">
+}) {
   if (skills.length === 0) {
-    return <p className="text-center text-muted-foreground">{t.skillsPage.empty}</p>
+    return <p className="text-center text-muted-foreground">{copy.empty}</p>
   }
 
   return (

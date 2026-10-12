@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 import type { Database, Framework, ResumeRole } from "@/types"
 
@@ -87,5 +88,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.resume.meta.title,
     description: t.resume.meta.description,
+    ...(await localizedPageSeo(locale, "/resume")),
   }
 }

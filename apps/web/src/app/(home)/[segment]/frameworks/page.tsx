@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { FrameworksView } from "@/app/(home)/[segment]/_ui/page/frameworks-view"
+import { FrameworksView } from "@/themes/default/page/frameworks-view"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { FrameworksResponse } from "./interfaces"
@@ -19,7 +20,7 @@ export default async function FrameworksRoutePage({ params }: { params: Promise<
   return (
     <div className="space-y-10">
       <PageIntro title={t.frameworks.title} description={t.frameworks.description} />
-      <FrameworksView frameworks={frameworks} />
+      <FrameworksView frameworks={frameworks} copy={t.frameworks} common={t.common} />
     </div>
   )
 }
@@ -30,5 +31,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.frameworks.meta.title,
     description: t.frameworks.meta.description,
+    ...(await localizedPageSeo(locale, "/frameworks")),
   }
 }

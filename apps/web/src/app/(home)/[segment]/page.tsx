@@ -1,17 +1,11 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { About } from "@/app/(home)/[segment]/_ui/page/about"
-import { Experiences } from "@/app/(home)/[segment]/_ui/page/experiences"
-import { Hero } from "@/app/(home)/[segment]/_ui/page/hero"
-import { Projects } from "@/app/(home)/[segment]/_ui/page/projects"
-import { StackDatabases } from "@/app/(home)/[segment]/_ui/page/stack-databases"
-import { StackSkills } from "@/app/(home)/[segment]/_ui/page/stack-skills"
-import { StackTech } from "@/app/(home)/[segment]/_ui/page/stack-tech"
-import { Tools } from "@/app/(home)/[segment]/_ui/page/tools"
+import { HomePage } from "@/themes/default/home-page"
 import { getDictionary } from "@/i18n/get-dictionary"
-import { resolveSegmentLocale } from "@/i18n/segment-locale"
 import { localizedRoutes } from "@/i18n/routes"
+import { localizedPageSeo } from "@/i18n/seo"
+import { resolveSegmentLocale } from "@/i18n/segment-locale"
 import type { Database, Framework } from "@/types"
 
 import type { AboutStats, PageResponse } from "./interfaces"
@@ -45,22 +39,59 @@ export default async function HomeRoutePage({ params }: { params: Promise<{ segm
   }
 
   return (
-    <>
-      <Hero profile={hero.profile} />
-      <About
-        aboutExtended={about.profile.about_extended}
-        stats={aboutStats}
-        linkedin={about.linkedin}
-        socialNetworks={about.social_networks}
-        profileName={about.profile_name}
-      />
-      <Experiences experiences={experiences.experiences} limit={1} ctaHref={routes.experience} />
-      <Projects projects={projects.projects} limit={2} layout="grid" ctaHref={routes.projects} />
-      <StackTech frameworks={frameworks} />
-      <StackDatabases databases={databases} />
-      <Tools tools={tools.tools} limit={6} ctaHref={routes.tools} />
-      <StackSkills skills={skills.skills} />
-    </>
+    <HomePage
+      common={t.common}
+      hero={{
+        profile: hero.profile,
+        copy: t.hero,
+        contactHref: routes.contact,
+        resumeHref: routes.resume,
+      }}
+      about={{
+        aboutExtended: about.profile.about_extended,
+        stats: aboutStats,
+        linkedin: about.linkedin,
+        socialNetworks: about.social_networks,
+        profileName: about.profile_name,
+        copy: t.about,
+      }}
+      experiences={{
+        experiences: experiences.experiences,
+        copy: t.experience,
+        limit: 1,
+        ctaHref: routes.experience,
+      }}
+      projects={{
+        projects: projects.projects,
+        copy: t.projects,
+        limit: 2,
+        ctaHref: routes.projects,
+      }}
+      stack={{
+        frameworks,
+        copy: t.stackTech,
+        frameworksHref: routes.frameworks,
+        limit: 8,
+      }}
+      databases={{
+        databases,
+        copy: t.stackDatabases,
+        databasesHref: routes.databases,
+        limit: 8,
+      }}
+      tools={{
+        tools: tools.tools,
+        copy: t.tools,
+        limit: 6,
+        ctaHref: routes.tools,
+      }}
+      skills={{
+        skills: skills.skills,
+        copy: t.stackSkills,
+        skillsHref: routes.skills,
+        limit: 8,
+      }}
+    />
   )
 }
 
@@ -69,5 +100,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   const t = await getDictionary(locale)
   return {
     title: t.nav.about,
+    ...(await localizedPageSeo(locale, "")),
   }
 }

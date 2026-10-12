@@ -2,34 +2,34 @@
 
 import { ExternalLink } from "lucide-react"
 
-import { Reveal } from "../reveal"
-import { FrameworkBadges } from "../framework-badges"
+import { Reveal } from "@/themes/default/reveal"
+import { FrameworkBadges } from "@/themes/default/framework-badges"
 import { SanitizedHtml } from "@/components/sanitized-html"
-import { SectionCta } from "../section-cta"
-import { useSiteLocale } from "@/i18n/site-locale-provider"
-import type { Experience } from "@/types"
+import { SectionCta } from "@/themes/default/section-cta"
+import type { Experience, ExperiencesCopy } from "@/themes/types"
 
 export const Experiences = ({
   experiences,
+  copy,
   limit,
   ctaHref,
   ctaLabel,
   embedded = false,
 }: {
   experiences: Experience[]
+  copy: ExperiencesCopy
   limit?: number
   ctaHref?: string
   ctaLabel?: string
   embedded?: boolean
 }) => {
-  const { t } = useSiteLocale()
   const visibleExperiences = limit ? experiences.slice(0, limit) : experiences
-  const resolvedCtaLabel = ctaLabel ?? t.experience.ctaFull
+  const resolvedCtaLabel = ctaLabel ?? copy.ctaFull
 
   const heading = (
     <Reveal className="mx-auto max-w-2xl space-y-3 text-center">
-      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{t.experience.title}</h2>
-      <p className="text-muted-foreground">{t.experience.description}</p>
+      <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{copy.title}</h2>
+      <p className="text-muted-foreground">{copy.description}</p>
     </Reveal>
   )
   return (
@@ -78,7 +78,7 @@ export const Experiences = ({
                         className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:underline"
                       >
                         <ExternalLink className="size-3" />
-                        {t.experience.liveUrlLabel}
+                        {copy.liveUrlLabel}
                       </a>
                     )}
                   </div>

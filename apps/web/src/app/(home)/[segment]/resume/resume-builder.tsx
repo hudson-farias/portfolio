@@ -5,7 +5,7 @@ import { Download, Info, Loader2, RefreshCw, Sparkles } from "lucide-react"
 
 import { API } from "@/api/client"
 import { Button } from "@/components/ui/button"
-import { Reveal } from "@/app/(home)/[segment]/_ui/reveal"
+import { Reveal } from "@/themes/default/reveal"
 import { useSiteLocale } from "@/i18n/site-locale-provider"
 import {
   buildResumeQuery,

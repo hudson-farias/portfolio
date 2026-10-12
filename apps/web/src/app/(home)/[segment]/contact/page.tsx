@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { PageIntro } from "@/app/(home)/[segment]/_ui/page-intro"
-import { Contact } from "@/app/(home)/[segment]/_ui/page/contact"
+import { Contact } from "@/themes/default/page/contact"
+import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
 
 import type { ContactLayoutResponse } from "./interfaces"
@@ -19,7 +20,7 @@ export default async function ContactRoutePage({ params }: { params: Promise<{ s
   return (
     <div className="space-y-10">
       <PageIntro title={t.contact.title} description={t.contact.description} />
-      <Contact contact={contact} embedded />
+      <Contact contact={contact} copy={t.contact} embedded />
     </div>
   )
 }
@@ -30,5 +31,6 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
   return {
     title: t.contact.meta.title,
     description: t.contact.meta.description,
+    ...(await localizedPageSeo(locale, "/contact")),
   }
 }
