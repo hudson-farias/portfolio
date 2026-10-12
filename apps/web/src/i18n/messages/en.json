@@ -123,6 +123,10 @@
     "whatsappSubtitle": "Direct chat",
     "linkedinTitle": "LinkedIn",
     "linkedinSubtitle": "Professional profile",
+    "callout": {
+      "title": "Interested in collaborating or discussing a project?",
+      "description": "Open to strategic technical leadership roles and architecture consulting."
+    },
     "meta": {
       "title": "Contact",
       "description": "Send a message or choose a channel to discuss projects and opportunities."

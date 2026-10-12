@@ -1,17 +1,21 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { StackSkillsView } from "@/themes/default/page/stack-skills-view"
-import { PageIntro } from "@/themes/default/page-intro"
 import { getDictionary } from "@/i18n/get-dictionary"
+import { localizedRoutes } from "@/i18n/routes"
 import { localizedPageSeo } from "@/i18n/seo"
 import { resolveSegmentLocale } from "@/i18n/segment-locale"
+import { resolveTheme } from "@/themes/resolve"
+import { getUiThemeId } from "@/themes/ui-theme.server"
 
 import type { SkillsResponse } from "./interfaces"
 
 export default async function SkillsRoutePage({ params }: { params: Promise<{ segment: string }> }) {
   const locale = await resolveSegmentLocale(params)
+  const themeId = await getUiThemeId()
+  const { PageIntro, StackSkillsView, ContactCallout } = resolveTheme(themeId)
   const t = await getDictionary(locale)
+  const routes = localizedRoutes(locale)
   const response = await API.get("/landpage/skills", { locale })
   if (!response.ok) throw new Error(t.errors.skillsLoad)
 
@@ -19,8 +23,18 @@ export default async function SkillsRoutePage({ params }: { params: Promise<{ se
 
   return (
     <div className="space-y-10">
-      <PageIntro title={t.skillsPage.title} description={t.skillsPage.description} />
+      <PageIntro
+        title={t.skillsPage.title}
+        description={t.skillsPage.description}
+        eyebrow={`07 / ${t.skillsPage.title}`}
+      />
       <StackSkillsView skills={skills} copy={{ empty: t.skillsPage.empty }} />
+      <ContactCallout
+        href={routes.contact}
+        title={t.contact.callout.title}
+        description={t.contact.callout.description}
+        ctaLabel={t.contact.submit}
+      />
     </div>
   )
 }

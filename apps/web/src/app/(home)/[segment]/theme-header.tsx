@@ -1,22 +1,32 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import type { ComponentType } from "react"
+import { usePathname, useRouter } from "next/navigation"
 
-import { Header } from "@/themes/default/layout/header"
 import { locales } from "@/i18n/locales"
 import { switchLocalePath } from "@/i18n/routes"
+import type { ThemeId } from "@/themes"
 import type { HeaderProps } from "@/themes/types"
+import { setUiThemeId } from "@/themes/ui-theme"
 
-type ThemeHeaderProps = Omit<HeaderProps, "localeOptions">
+type ThemeHeaderProps = Omit<HeaderProps, "localeOptions" | "onUiThemeChange"> & {
+  Header: ComponentType<HeaderProps>
+}
 
-/** Client wrapper so locale switch hrefs preserve the current path. */
-export function ThemeHeader(props: ThemeHeaderProps) {
+/** Client wrapper so locale switch hrefs preserve the current path and UI theme cookie can refresh. */
+export function ThemeHeader({ Header, ...props }: ThemeHeaderProps) {
   const pathname = usePathname()
+  const router = useRouter()
 
   const localeOptions = locales.map((code) => ({
     code,
     href: switchLocalePath(pathname, code),
   }))
 
-  return <Header {...props} localeOptions={localeOptions} />
+  const onUiThemeChange = (themeId: ThemeId) => {
+    setUiThemeId(themeId)
+    router.refresh()
+  }
+
+  return <Header {...props} localeOptions={localeOptions} onUiThemeChange={onUiThemeChange} />
 }

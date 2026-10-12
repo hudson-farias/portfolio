@@ -123,6 +123,10 @@
     "whatsappSubtitle": "Conversa direta",
     "linkedinTitle": "LinkedIn",
     "linkedinSubtitle": "Perfil profissional",
+    "callout": {
+      "title": "Interessado em colaborar ou discutir um projeto?",
+      "description": "Disponível para posições estratégicas de liderança técnica e consultoria de arquitetura."
+    },
     "meta": {
       "title": "Contato",
       "description": "Envie uma mensagem ou escolha um canal para falar sobre projetos e oportunidades."

@@ -6,6 +6,8 @@ export function PageIntro({
 }: {
   title: string
   description: string
+  /** Accepted for theme API parity with Noir Blue; unused in default. */
+  eyebrow?: string
 }) {
   return (
     <Reveal className="mx-auto max-w-2xl space-y-3 text-center">

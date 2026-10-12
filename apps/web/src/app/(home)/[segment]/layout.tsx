@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { Footer } from "@/themes/default/layout/footer"
 import { themes } from "@/themes"
+import { resolveTheme } from "@/themes/resolve"
+import { getUiThemeId } from "@/themes/ui-theme.server"
 import { getDictionary } from "@/i18n/get-dictionary"
 import type { Locale } from "@/i18n/locales"
 import { localizedRoutes } from "@/i18n/routes"
@@ -55,6 +56,8 @@ export async function generateMetadata({ params }: { params: Promise<{ segment: 
 
 export default async function SegmentLayout({ children, params }: { children: React.ReactNode; params: Promise<{ segment: string }> }) {
   const locale = await resolveSegmentLocale(params)
+  const themeId = await getUiThemeId()
+  const { Header, Footer } = resolveTheme(themeId)
 
   const t = await getDictionary(locale)
   const response = await API.get("/landpage/layout", { locale })
@@ -94,13 +97,26 @@ export default async function SegmentLayout({ children, params }: { children: Re
     label: theme.label,
   }))
 
+  const mainClassName =
+    themeId === "noir-blue"
+      ? "mx-auto flex w-full max-w-[1280px] flex-col gap-0 px-4 pb-10 sm:px-8 md:pb-14 lg:px-20"
+      : "mx-auto flex w-full max-w-6xl flex-col gap-24 px-6 py-10 md:px-10 md:py-14"
+
   return (
     <>
       <JsonLd locale={locale} />
 
       <SiteLocaleProvider locale={locale} t={t} routes={routes}>
-        <div className="flex min-h-screen w-full flex-col">
+        <div
+          data-ui-theme={themeId}
+          className={
+            themeId === "noir-blue"
+              ? "flex min-h-screen w-full flex-col bg-background text-foreground"
+              : "flex min-h-screen w-full flex-col"
+          }
+        >
           <ThemeHeader
+            Header={Header}
             homeHref={routes.home}
             homeAriaLabel={t.nav.home}
             navItems={navItems}
@@ -108,12 +124,10 @@ export default async function SegmentLayout({ children, params }: { children: Re
             adminHref="/admin"
             adminLabel={t.nav.admin}
             uiThemes={uiThemes}
-            selectedThemeId="default"
+            selectedThemeId={themeId}
           />
 
-          <main className="mx-auto flex w-full max-w-6xl flex-col gap-24 px-6 py-10 md:px-10 md:py-14">
-            {children}
-          </main>
+          <main className={mainClassName}>{children}</main>
 
           <Footer
             profileName={hero.profile.name}

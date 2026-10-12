@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 
 import { API } from "@/api/server"
-import { HomePage } from "@/themes/default/home-page"
+import { resolveTheme } from "@/themes/resolve"
+import { getUiThemeId } from "@/themes/ui-theme.server"
 import { getDictionary } from "@/i18n/get-dictionary"
 import { localizedRoutes } from "@/i18n/routes"
 import { localizedPageSeo } from "@/i18n/seo"
@@ -12,6 +13,8 @@ import type { AboutStats, PageResponse } from "./interfaces"
 
 export default async function HomeRoutePage({ params }: { params: Promise<{ segment: string }> }) {
   const locale = await resolveSegmentLocale(params)
+  const themeId = await getUiThemeId()
+  const { HomePage } = resolveTheme(themeId)
   const t = await getDictionary(locale)
   const routes = localizedRoutes(locale)
 

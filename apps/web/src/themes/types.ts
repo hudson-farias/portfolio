@@ -124,6 +124,14 @@ export type FooterProps = {
   stackLinks: NavItem[]
 }
 
+/** Dedicated-page bottom CTA linking to the contact route (Noir Blue). */
+export type ContactCalloutProps = {
+  href: string
+  title: string
+  description: string
+  ctaLabel: string
+}
+
 export type LandpageShellProps = {
   children: ReactNode
   header: HeaderProps

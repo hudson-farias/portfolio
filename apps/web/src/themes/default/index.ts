@@ -5,6 +5,7 @@ export { Reveal } from "./reveal"
 export { FrameworkBadges } from "./framework-badges"
 export { PageIntro } from "./page-intro"
 export { SectionCta } from "./section-cta"
+export { ContactCallout } from "./contact-callout"
 
 export { About } from "./page/about"
 export { Contact } from "./page/contact"

@@ -21,6 +21,14 @@ Em português e inglês (`/pt` e `/en`), com tema claro e escuro.
 | **Contato** | E-mail e canais do perfil |
 | **Currículo** | PDF com filtros de stack e experiências; com sessão admin, matching de vaga via Gemini (filtros, títulos, cargos, skills faltantes e resumo) |
 
+## O que ainda falta
+
+A home, a experiência, os projetos e as páginas de contato, frameworks, bancos, skills e ferramentas já seguem o tema gravado no cookie `portfolio-ui-theme`. O currículo ainda abre com o intro do tema Padrão. O formulário de contato continua desligado de propósito. A imagem do projeto aparece no card, e a página de cada projeto ainda não existe. O card do Twitter pede imagem grande e sai sem ela.
+
+Quero, nesta ordem: fechar o currículo no tema escolhido, corrigir o chrome do Noir Blue, ligar o contato, publicar a página do projeto, a imagem de Open Graph, um analytics enxuto, testes do PDF, do job-match e da escolha de tema, páginas de erro, e o pipeline do site. O CI de hoje só republica a API.
+
+O contrato está na [especificação](docs/spec.md). A decisão de deixar isso explícito está no [ADR 0001](docs/adr/0001-trabalho-pendente.md).
+
 ## Painel
 
 Em `/admin` eu gerencio perfil, experiências, projetos, frameworks, bancos de dados, ferramentas, skills, linguagens, cargos e redes sociais. O dashboard resume as contagens. As chaves de acesso ficam em `/admin/api-keys` — o segredo aparece só na criação.
